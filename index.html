@@ -1,0 +1,2717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIAN_DIGGIN — Documentación oficial</title>
+<meta name="description" content="Documentación técnica y de diseño del videojuego Dian_Diggin, desarrollado en Unity 6.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/csharp.min.js"></script>
+
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --soil-950:#140d08;
+  --soil-900:#1d130c;
+  --soil-850:#241a10;
+  --soil-800:#2c2013;
+  --soil-700:#3f2c1a;
+  --soil-600:#5a3f26;
+  --clay-500:#8a5a35;
+  --clay-400:#a97b4e;
+  --amber-400:#e3a856;
+  --amber-300:#f0c584;
+  --amber-200:#f8dfb4;
+  --moss-500:#6f9b5a;
+  --moss-400:#8fc172;
+  --ember-500:#c1543c;
+  --ember-400:#da6f52;
+  --parchment-100:#f4ead6;
+  --parchment-200:#e9dabd;
+  --ink-050:#fbf5e8;
+  --ink-200:#d9c7a8;
+  --ink-400:#b39d7c;
+  --ink-600:#8a7458;
+
+  --font-display:'Press Start 2P', monospace;
+  --font-head:'Space Grotesk', sans-serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+
+  --sidebar-w: 280px;
+  --radius-s: 4px;
+  --radius-m: 8px;
+  --radius-l: 14px;
+}
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--soil-950);
+  color:var(--ink-200);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto;}
+  *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important;}
+}
+
+img{max-width:100%; display:block;}
+a{color:inherit;}
+:focus-visible{outline:2px solid var(--amber-400); outline-offset:2px;}
+
+h1,h2,h3,h4{font-family:var(--font-head); color:var(--ink-050); margin:0; font-weight:600;}
+p{margin:0 0 1em 0;}
+p:last-child{margin-bottom:0;}
+
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--amber-300);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:10px;
+}
+.eyebrow .depth-tag{
+  background:var(--soil-800);
+  border:1px solid var(--soil-600);
+  color:var(--amber-300);
+  padding:2px 8px;
+  border-radius:20px;
+  font-size:11px;
+}
+
+.container{max-width:920px; margin:0 auto; padding:0 32px;}
+
+/* ============================================================
+   LAYOUT SHELL
+   ============================================================ */
+.app{display:flex; min-height:100vh;}
+
+/* ---- Sidebar / depth gauge (signature element) ---- */
+.sidebar{
+  width:var(--sidebar-w);
+  flex-shrink:0;
+  position:fixed;
+  top:0; left:0; bottom:0;
+  background:linear-gradient(180deg, var(--soil-900), var(--soil-950) 60%);
+  border-right:1px solid var(--soil-700);
+  display:flex;
+  flex-direction:column;
+  z-index:40;
+  transition:transform .3s ease;
+}
+.sidebar-brand{
+  padding:24px 22px 18px;
+  border-bottom:1px solid var(--soil-700);
+}
+.sidebar-brand .logo{
+  font-family:var(--font-display);
+  font-size:13px;
+  color:var(--parchment-100);
+  line-height:1.6;
+  letter-spacing:.02em;
+}
+.sidebar-brand .logo span{color:var(--amber-400);}
+.sidebar-brand .tag{
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:var(--ink-400);
+  margin-top:8px;
+}
+
+.gauge-scroll{
+  flex:1;
+  overflow-y:auto;
+  padding:18px 0 24px;
+  display:flex;
+  gap:0;
+}
+.gauge-scroll::-webkit-scrollbar{width:6px;}
+.gauge-scroll::-webkit-scrollbar-thumb{background:var(--soil-700); border-radius:6px;}
+
+.gauge-rail{
+  width:34px;
+  flex-shrink:0;
+  position:relative;
+  display:flex;
+  justify-content:center;
+}
+.gauge-rail::before{
+  content:"";
+  position:absolute;
+  top:0; bottom:0; left:50%;
+  width:2px;
+  background:repeating-linear-gradient(180deg, var(--soil-600) 0 6px, transparent 6px 12px);
+  transform:translateX(-50%);
+}
+.gauge-marker{
+  position:absolute;
+  left:50%;
+  width:16px; height:16px;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:var(--amber-400);
+  box-shadow:0 0 0 4px rgba(227,168,86,.18), 0 0 14px rgba(227,168,86,.5);
+  transition:top .25s cubic-bezier(.4,0,.2,1);
+  top:0;
+}
+.gauge-marker::after{
+  content:attr(data-depth);
+  position:absolute;
+  left:24px; top:50%;
+  transform:translateY(-50%);
+  font-family:var(--font-mono);
+  font-size:10px;
+  color:var(--amber-300);
+  white-space:nowrap;
+  background:var(--soil-900);
+  padding:1px 6px;
+  border-radius:4px;
+  border:1px solid var(--soil-700);
+}
+
+.nav-list{list-style:none; margin:0; padding:0 18px 0 6px; flex:1;}
+.nav-list li{margin-bottom:2px;}
+.nav-link{
+  display:block;
+  padding:9px 12px;
+  border-radius:var(--radius-s);
+  font-size:13.5px;
+  color:var(--ink-400);
+  text-decoration:none;
+  border-left:2px solid transparent;
+  transition:color .15s ease, background .15s ease, border-color .15s ease;
+}
+.nav-link:hover{color:var(--ink-050); background:var(--soil-850);}
+.nav-link.active{
+  color:var(--amber-300);
+  background:var(--soil-850);
+  border-left-color:var(--amber-400);
+  font-weight:600;
+}
+.nav-list .nav-group-label{
+  font-family:var(--font-mono);
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--ink-600);
+  padding:14px 12px 4px;
+}
+
+.sidebar-foot{
+  padding:14px 22px;
+  border-top:1px solid var(--soil-700);
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  color:var(--ink-600);
+}
+
+/* ---- Mobile top bar / hamburger ---- */
+.topbar{
+  display:none;
+  position:fixed;
+  top:0; left:0; right:0;
+  height:58px;
+  background:var(--soil-900);
+  border-bottom:1px solid var(--soil-700);
+  z-index:50;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 16px;
+}
+.topbar .logo{
+  font-family:var(--font-display);
+  font-size:11px;
+  color:var(--parchment-100);
+}
+.topbar .logo span{color:var(--amber-400);}
+.hamburger{
+  width:38px; height:38px;
+  border:1px solid var(--soil-600);
+  border-radius:var(--radius-s);
+  background:var(--soil-850);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+  cursor:pointer;
+}
+.hamburger span{width:18px; height:2px; background:var(--amber-300); display:block; transition:transform .2s, opacity .2s;}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+/* ---- Main content ---- */
+main{
+  margin-left:var(--sidebar-w);
+  flex:1;
+  min-width:0;
+}
+section{padding:96px 0; border-bottom:1px solid var(--soil-900);}
+section:target{scroll-margin-top:20px;}
+
+/* ============================================================
+   HERO — strata cross-section
+   ============================================================ */
+.hero{
+  position:relative;
+  margin-left:0;
+  padding:0;
+  overflow:hidden;
+  border-bottom:1px solid var(--soil-700);
+  min-height:92vh;
+  display:flex;
+  align-items:flex-end;
+}
+.strata{
+  position:absolute; inset:0;
+  background:
+    linear-gradient(180deg,
+      #0e2e3a 0%, #123a44 9%,
+      #274a2d 9%, #2f5934 20%,
+      var(--soil-800) 20%, var(--soil-800) 38%,
+      var(--soil-700) 38%, var(--soil-700) 56%,
+      var(--soil-600) 56%, var(--soil-600) 74%,
+      #241a10 74%, #140d08 100%);
+}
+.strata .vein{
+  position:absolute;
+  border-radius:50%;
+  background:radial-gradient(circle, var(--amber-400) 0%, transparent 70%);
+  opacity:.55;
+  filter:blur(1px);
+}
+.strata .grain{
+  position:absolute; inset:0;
+  background-image:radial-gradient(rgba(0,0,0,.25) 1px, transparent 1px);
+  background-size:5px 5px;
+  opacity:.25;
+  mix-blend-mode:multiply;
+}
+.hero-content{
+  position:relative;
+  z-index:2;
+  width:100%;
+  padding:0 32px 72px;
+  max-width:980px;
+  margin:0 auto;
+}
+.hero-content .eyebrow{color:var(--amber-200);}
+.hero-title{
+  font-family:var(--font-display);
+  font-size:clamp(26px, 5vw, 46px);
+  line-height:1.35;
+  color:var(--parchment-100);
+  text-shadow:0 3px 0 rgba(0,0,0,.4);
+  margin-bottom:18px;
+}
+.hero-title .accent{color:var(--amber-400);}
+.hero-sub{
+  font-size:17px;
+  color:var(--ink-200);
+  max-width:60ch;
+  margin-bottom:28px;
+}
+.hero-stats{
+  display:flex; flex-wrap:wrap; gap:12px;
+}
+.stat-chip{
+  font-family:var(--font-mono);
+  font-size:12.5px;
+  color:var(--amber-200);
+  background:rgba(20,13,8,.55);
+  border:1px solid rgba(227,168,86,.25);
+  padding:7px 12px;
+  border-radius:20px;
+  backdrop-filter:blur(2px);
+}
+.hero-scroll-cue{
+  position:absolute; bottom:22px; left:50%; transform:translateX(-50%);
+  font-family:var(--font-mono); font-size:10px; color:var(--amber-200);
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  opacity:.8;
+  animation:bob 2.2s ease-in-out infinite;
+}
+.hero-scroll-cue .pick{font-size:16px;}
+@keyframes bob{0%,100%{transform:translate(-50%,0);}50%{transform:translate(-50%,6px);}}
+
+/* ============================================================
+   GENERIC SECTION SCAFFOLDING
+   ============================================================ */
+.section-head{margin-bottom:40px; max-width:70ch;}
+.section-head h2{font-size:clamp(24px,3.4vw,32px); margin-bottom:14px;}
+.section-head p{color:var(--ink-400); font-size:15.5px;}
+
+.card{
+  background:var(--soil-900);
+  border:1px solid var(--soil-700);
+  border-radius:var(--radius-l);
+  padding:28px;
+}
+.card + .card{margin-top:20px;}
+
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+.grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+@media (max-width:760px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+
+.pill-list{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px;}
+.pill{
+  font-family:var(--font-mono);
+  font-size:12px;
+  background:var(--soil-850);
+  border:1px solid var(--soil-700);
+  color:var(--ink-200);
+  padding:5px 11px;
+  border-radius:20px;
+}
+.pill.good{border-color:rgba(143,193,114,.4); color:var(--moss-400);}
+.pill.warn{border-color:rgba(218,111,82,.45); color:var(--ember-400);}
+
+.placeholder-frame{
+  aspect-ratio:4/3;
+  border:2px dashed var(--soil-600);
+  border-radius:var(--radius-m);
+  background:
+    repeating-linear-gradient(45deg, var(--soil-850) 0 10px, var(--soil-900) 10px 20px);
+  display:flex; align-items:center; justify-content:center;
+  text-align:center;
+  padding:14px;
+  color:var(--ink-600);
+  font-family:var(--font-mono);
+  font-size:12px;
+}
+.placeholder-frame .icon{font-size:22px; display:block; margin-bottom:8px; opacity:.6;}
+
+.callout{
+  border-left:3px solid var(--amber-400);
+  background:var(--soil-850);
+  padding:14px 18px;
+  border-radius:0 var(--radius-m) var(--radius-m) 0;
+  font-size:14.5px;
+  color:var(--ink-200);
+}
+.callout.todo{border-left-color:var(--ink-600); color:var(--ink-400); font-family:var(--font-mono); font-size:12.5px;}
+.callout.bug{border-left-color:var(--ember-500);}
+
+/* ---- Script documentation card ---- */
+.script-card{
+  border:1px solid var(--soil-700);
+  border-radius:var(--radius-l);
+  background:var(--soil-900);
+  overflow:hidden;
+  margin-bottom:26px;
+}
+.script-card-head{
+  padding:22px 26px;
+  border-bottom:1px solid var(--soil-700);
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.script-card-head h3{
+  font-size:19px;
+  display:flex; align-items:baseline; gap:10px;
+}
+.script-card-head h3 .filename{
+  font-family:var(--font-mono);
+  font-size:12px;
+  color:var(--ink-600);
+  font-weight:400;
+}
+.script-card-body{padding:26px;}
+.script-card-body h4{
+  font-family:var(--font-mono);
+  font-size:11.5px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--amber-300);
+  margin:26px 0 10px;
+}
+.script-card-body h4:first-child{margin-top:0;}
+.script-card-body ul{margin:0; padding-left:18px; color:var(--ink-200); font-size:14.5px;}
+.script-card-body ul li{margin-bottom:6px;}
+.script-card-body ul li b{color:var(--parchment-200); font-weight:600;}
+
+.toggle-code-btn{
+  font-family:var(--font-mono);
+  font-size:12px;
+  background:var(--soil-850);
+  border:1px solid var(--soil-600);
+  color:var(--amber-300);
+  padding:8px 14px;
+  border-radius:20px;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background .15s ease;
+}
+.toggle-code-btn:hover{background:var(--soil-700);}
+
+.code-wrap{display:none; border-top:1px solid var(--soil-700);}
+.code-wrap.open{display:block;}
+.code-toolbar{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 18px;
+  background:var(--soil-850);
+  font-family:var(--font-mono);
+  font-size:11.5px;
+  color:var(--ink-400);
+}
+.copy-btn{
+  background:transparent;
+  border:1px solid var(--soil-600);
+  color:var(--ink-200);
+  font-family:var(--font-mono);
+  font-size:11px;
+  padding:5px 11px;
+  border-radius:var(--radius-s);
+  cursor:pointer;
+  transition:border-color .15s ease, color .15s ease;
+}
+.copy-btn:hover{border-color:var(--amber-400); color:var(--amber-300);}
+.copy-btn.copied{border-color:var(--moss-400); color:var(--moss-400);}
+pre{margin:0; overflow-x:auto; padding:18px; background:var(--soil-950);}
+code{font-family:var(--font-mono); font-size:13px; line-height:1.6;}
+
+/* hljs palette override */
+.hljs-keyword,.hljs-built_in{color:var(--amber-300);}
+.hljs-type{color:var(--moss-400);}
+.hljs-string{color:var(--ember-400);}
+.hljs-comment{color:var(--ink-600); font-style:italic;}
+.hljs-title,.hljs-title.function_{color:var(--parchment-100);}
+.hljs-number,.hljs-literal{color:var(--amber-200);}
+.hljs-params{color:var(--ink-200);}
+.hljs-attr,.hljs-property{color:var(--moss-400);}
+
+/* ---- Diagram blocks ---- */
+.diagram{
+  font-family:var(--font-mono);
+  font-size:13px;
+  background:var(--soil-950);
+  border:1px solid var(--soil-700);
+  border-radius:var(--radius-m);
+  padding:22px;
+  color:var(--ink-200);
+  overflow-x:auto;
+  white-space:pre;
+  line-height:1.7;
+}
+.diagram .n{color:var(--amber-300);}
+.diagram .a{color:var(--moss-400);}
+
+/* ---- Footer ---- */
+footer{
+  padding:50px 0 70px;
+  font-family:var(--font-mono);
+  font-size:12px;
+  color:var(--ink-600);
+}
+
+/* ---- Lightbox ---- */
+.lightbox{
+  position:fixed; inset:0; background:rgba(10,7,4,.9);
+  display:none; align-items:center; justify-content:center; z-index:100; padding:40px;
+}
+.lightbox.open{display:flex;}
+.lightbox img{max-height:86vh; border-radius:var(--radius-m); border:1px solid var(--soil-600);}
+.lightbox-close{
+  position:absolute; top:24px; right:28px;
+  width:40px; height:40px; border-radius:50%;
+  background:var(--soil-850); border:1px solid var(--soil-600); color:var(--amber-300);
+  font-size:18px; cursor:pointer;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:980px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0); box-shadow:20px 0 40px rgba(0,0,0,.4);}
+  main{margin-left:0; padding-top:58px;}
+  .topbar{display:flex;}
+  .hero{min-height:78vh;}
+}
+@media (max-width:600px){
+  .container{padding:0 20px;}
+  section{padding:64px 0;}
+  .script-card-body{padding:20px;}
+  .script-card-head{padding:18px 20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     MOBILE TOP BAR
+     ============================================================ -->
+<div class="topbar">
+  <div class="logo">DIAN_<span>DIGGIN</span></div>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Abrir menú" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+
+<div class="app">
+
+  <!-- ============================================================
+       SIDEBAR — nav + depth gauge (signature element)
+       ============================================================ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">DIAN_<span>DIGGIN</span></div>
+      <div class="tag">Documentación técnica · Unity 6000.0.47f1</div>
+    </div>
+    <div class="gauge-scroll">
+      <div class="gauge-rail" id="gaugeRail">
+        <div class="gauge-marker" id="gaugeMarker" data-depth="0m"></div>
+      </div>
+      <ul class="nav-list" id="navList">
+        <li><a href="#hero" class="nav-link" data-depth="0">Portada</a></li>
+        <li class="nav-group-label">Diseño</li>
+        <li><a href="#resumen" class="nav-link" data-depth="5">Resumen general</a></li>
+        <li><a href="#galeria" class="nav-link" data-depth="8">Galería</a></li>
+        <li><a href="#historia" class="nav-link" data-depth="10">Historia</a></li>
+        <li><a href="#personaje" class="nav-link" data-depth="18">Personaje · Dian</a></li>
+        <li><a href="#vida-corazones" class="nav-link" data-depth="26">Vida y corazones</a></li>
+        <li><a href="#combate" class="nav-link" data-depth="34">Sistema de combate</a></li>
+        <li><a href="#enemigos" class="nav-link" data-depth="42">Enemigos</a></li>
+        <li><a href="#jefe" class="nav-link" data-depth="50">Jefe final</a></li>
+        <li><a href="#ambiente" class="nav-link" data-depth="58">Cámara y ambiente</a></li>
+        <li><a href="#interfaz" class="nav-link" data-depth="66">Interfaz y flujo</a></li>
+        <li><a href="#controles" class="nav-link" data-depth="74">Controles</a></li>
+        <li><a href="#hud" class="nav-link" data-depth="80">HUD</a></li>
+        <li class="nav-group-label">Ingeniería</li>
+        <li><a href="#codigo-simple" class="nav-link" data-depth="84">Código explicado</a></li>
+        <li><a href="#poo" class="nav-link" data-depth="86">Los 4 pilares del POO</a></li>
+        <li><a href="#arquitectura" class="nav-link" data-depth="88">Arquitectura</a></li>
+        <li><a href="#motor" class="nav-link" data-depth="96">Motor y build</a></li>
+        <li><a href="#conclusiones" class="nav-link" data-depth="104">Conclusiones</a></li>
+      </ul>
+    </div>
+    <div class="sidebar-foot">Capa actual: <span id="gaugeFootLabel">Superficie · 0m</span></div>
+  </aside>
+
+  <!-- ============================================================
+       MAIN
+       ============================================================ -->
+  <main>
+
+    <!-- HERO -->
+    <section class="hero" id="hero">
+      <div class="strata">
+        <div class="grain"></div>
+        <div class="vein" style="width:70px;height:70px; top:58%; left:12%;"></div>
+        <div class="vein" style="width:40px;height:40px; top:68%; left:70%;"></div>
+        <div class="vein" style="width:90px;height:90px; top:80%; left:45%;"></div>
+      </div>
+      <div class="hero-content">
+        <p class="eyebrow"><span class="depth-tag">CAPA 00 · SUPERFICIE</span> Documentación oficial del proyecto</p>
+        <h1 class="hero-title">DIAN_<span class="accent">DIGGIN</span></h1>
+        <p class="hero-sub">Plataformas 2D construido en Unity, centrado en excavar, saltar, combatir y sobrevivir capa tras capa en busca de venganza contra el gusano que arrebato un preciado tesoro del protagonista. Esto no es un Iceberg... es una madriguera. Y mientras más profundo decendamos, más secretos del proyecto iremos descubriendo y desentreñando.</p>
+        <div class="hero-stats">
+          <span class="stat-chip">Motor: Unity 6000.0.47f1</span>
+          <span class="stat-chip">Lenguaje: C#</span>
+          <span class="stat-chip">Backend: Mono (Versión .NET que copila y ejecuta código C#)</span>
+          <span class="stat-chip">Plataforma: Windows x64</span>
+          <span class="stat-chip">Física: Rigidbody2D</span>
+        </div>
+        <p style="margin-top:18px;">
+          <a href="https://github.com/Rufistrukis/Dian_Diggin/tree/main" target="_blank" rel="noopener" style="font-family:var(--font-mono); font-size:13px; color:var(--amber-300); text-decoration:underline; text-underline-offset:3px;">Ver el repositorio en GitHub ↗</a>
+        </p>
+      </div>
+      <div class="hero-scroll-cue"><span class="pick">⛏</span>DESCIENDE PARA EXCAVAR</div>
+    </section>
+
+    <!-- RESUMEN -->
+    <section id="resumen">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 01 · -5m</span></p>
+          <h2>Resumen general</h2>
+          <p>Pequeño contexto antes de ver código.</p>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:12px;">¿Qué habrá en el codigo?</h4>
+            <ul style="padding-left:18px; font-size:14.5px; color:var(--ink-200);">
+              <li>Plataformas 2D con movimiento, doble salto opcional y ataque cuerpo a cuerpo.</li>
+              <li>Un personaje jugable llamado <b style="color:var(--parchment-200)">Dian</b>, controlado por <code style="font-family:var(--font-mono)">PlayerController</code>.</li>
+              <li>Sistema de vida basado en corazones, con curación por objetos y daño por contacto enemigo.</li>
+              <li>Dos tipos de enemigo perseguidor (murciélago y gusano) y un jefe con salto añadido.</li>
+              <li>Progresión de nivel por avance secuencial de escenas, menú, pausa y créditos.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:12px;">Un terreno rocoso se aproxima</h4>
+            <p class="callout todo">A partir de aqui solo bajaremos más y más. Si bajar es tu abilidad, ¿Que eres sin tu capacidad de escabar?</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GALERÍA -->
+    <section id="galeria">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 01B · -8m</span></p>
+          <h2>Galería</h2>
+          <p>Espacio reservado para capturas de pantalla y arte del juego.</p>
+        </div>
+        <div class="grid-3">
+		<img src="FG1.PNG" alt="Captura 1">
+		<img src="FG2.PNG" alt="Captura 2">
+		<img src="FG3.PNG" alt="Captura 3">
+		<img src="FG4.PNG" alt="Captura 4">
+		<img src="FG5.PNG" alt="Captura 5">
+		<img src="FG6.PNG" alt="Captura 6">
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORIA -->
+    <section id="historia">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 02 · -10m</span></p>
+          <h2>Historia</h2>
+        </div>
+        <div class="callout todo">Dian era un topo de madriguera tranquilo, tenia en su haber una lata de comida que resguardaba para un momento especial, sin embargo en una mala juagada del destino un gusano gigante paso corriendo destruyendo todo a su paso y junto a ello se llevo la lata de comida; a partir de ese incidente Dian juro cobrar venganza contra aquel gusano sin importar quien se interpusiera en su camino.</div>
+      </div>
+    </section>
+
+    <!-- PERSONAJE -->
+    <section id="personaje">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 03 · -18m</span></p>
+          <h2>Personaje jugable · Dian</h2>
+          <p>Todo el movimiento, salto y acciones del protagonista viven en un único script: <code style="font-family:var(--font-mono)">PlayerController</code>.</p>
+        </div>
+        <div style="margin-bottom:24px;">
+          <div class="card">
+            <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:10px;">Acciones disponibles</h4>
+            <ul class="pill-list">
+              <li class="pill">Movimiento horizontal</li>
+              <li class="pill">Salto</li>
+              <li class="pill">Doble salto (opcional)</li>
+              <li class="pill">Ataque</li>
+              <li class="pill">Excavar</li>
+              <li class="pill">Recoger / agacharse</li>
+              <li class="pill">Rebote al recibir daño</li>
+            </ul>
+          </div>
+        </div>
+        <div id="scripts-personaje"></div>
+      </div>
+    </section>
+
+    <!-- VIDA Y CORAZONES -->
+    <section id="vida-corazones">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 04 · -26m</span></p>
+          <h2>Sistema de vida y corazones</h2>
+          <p>El dato de vida vive en <code style="font-family:var(--font-mono)">VidaJugador</code> y se comunica al HUD mediante eventos, sin que nadie dependa directamente de nadie más de lo necesario.</p>
+        </div>
+        <div class="diagram" style="margin-bottom:32px;"><span class="n">VidaJugador</span>  ──Action&lt;int&gt; JugadorTomoDaño──▶  <span class="n">ContenedorCorazones</span>  ──ActivarCorazon()/DesactivarCorazon()──▶  <span class="n">CorazonUI</span>
+     │                                                                    <span class="a">(un ícono de corazón)</span>
+     └──Action&lt;int&gt; JugadorSeCuro────────▶  (misma ruta)
+
+<span class="n">CurarAlTocar</span>  ──OnTriggerEnter2D + TryGetComponent&lt;VidaJugador&gt;──▶  <span class="n">VidaJugador</span>.CurarVida()</div>
+        <div id="scripts-vida" style="margin-top:32px;"></div>
+      </div>
+    </section>
+
+    <!-- COMBATE -->
+    <section id="combate">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 05 · -34m</span></p>
+          <h2>Sistema de combate</h2>
+          <p>El ataque del jugador y el daño de los enemigos están separados en scripts distintos: uno decide <i>cuándo y dónde</i> se golpea, y otro aplica el resultado sobre la vida del objetivo.</p>
+        </div>
+        <div class="diagram" style="margin-bottom:32px;"><span class="n">AtaqueJugador</span> (Fire1 + cooldown)
+   └─ OverlapCircleAll(radioAtaque) ──▶ para cada <span class="n">VidaEnemigo</span> tocado ──▶ TomarDaño(dañoAtaque)
+
+<span class="n">DañoAJugador</span> (OnTriggerEnter2D en el enemigo)
+   └─ TryGetComponent&lt;VidaJugador&gt; ──▶ TomarDaño(dañoPorToque)
+   └─ PlayerController.RecibeDanio() ──▶ aplica rebote (knockback)</div>
+        <div id="scripts-combate"></div>
+      </div>
+    </section>
+
+    <!-- ENEMIGOS -->
+    <section id="enemigos">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 06 · -42m</span></p>
+          <h2>Enemigos</h2>
+          <p>Ambos enemigos comparten la misma máquina de estados de tres fases: <b style="color:var(--parchment-200)">Esperando → Siguiendo → Volviendo</b>. Se diferencian en cómo se mueven físicamente.</p>
+        </div>
+        <div class="diagram" style="margin-bottom:32px;">        ┌──────────────┐   jugador entra al radio    ┌──────────────┐
+        │  Esperando   │ ───────────────────────────▶ │   Siguiendo   │
+        └──────────────┘                               └──────┬───────┘
+              ▲                                                │ se aleja demasiado /
+              │        llega al punto de partida               │ pierde referencia
+              │                                                ▼
+        ┌──────────────┐  ◀──────────────────────────  ┌──────────────┐
+        │   (Esperando) │                               │   Volviendo   │
+        └──────────────┘                               └──────────────┘</div>
+        <div id="scripts-enemigos"></div>
+      </div>
+    </section>
+
+    <!-- JEFE -->
+    <section id="jefe">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 07 · -50m</span></p>
+          <h2>Jefe final</h2>
+          <p>El jefe reutiliza la misma máquina de estados que los enemigos comunes y añade un salto aleatorio independiente del estado en el que se encuentre.</p>
+        </div>
+        <div id="scripts-jefe"></div>
+      </div>
+    </section>
+
+    <!-- CAMARA / AMBIENTE -->
+    <section id="ambiente">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 08 · -58m</span></p>
+          <h2>Cámara y ambiente</h2>
+          <p>Una cámara de seguimiento suave y un fondo con parallax por profundidad.</p>
+        </div>
+        <div id="scripts-ambiente"></div>
+      </div>
+    </section>
+
+    <!-- INTERFAZ / FLUJO -->
+    <section id="interfaz">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 09 · -66m</span></p>
+          <h2>Interfaz y flujo de escenas</h2>
+          <p>Botones de menú, pausa, gestor de partida y créditos: el esqueleto que conecta todas las pantallas del juego.</p>
+        </div>
+        <div class="diagram" style="margin-bottom:32px;">   <span class="n">Inicio</span> ──Buttons.play()──▶ <span class="n">Nivel</span> ──Buttons.play() / PasarNivel──▶ <span class="n">Nivel siguiente</span> ... ──▶ <span class="n">Creditos</span>
+      ▲                              │                                                         │
+      └────────Buttons.irmenu()──────┴──────────GameManager.IrMenu() (Game Over)────────────────┘
+                                                        │
+                                            Creditos.VolverMenu() (auto a los 97.05s o con ESC)</div>
+        <div id="scripts-interfaz"></div>
+      </div>
+    </section>
+
+    <!-- CONTROLES -->
+    <section id="controles">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 10 · -74m</span></p>
+          <h2>Controles</h2>
+          <p>Extraídos directamente de las lecturas de <code style="font-family:var(--font-mono)">Input</code> en el código — dependen del mapeo por defecto del Input Manager de Unity para los ejes y botones nombrados.</p>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:12px;">Movimiento y acción</h4>
+            <ul style="padding-left:18px; font-size:14.5px; color:var(--ink-200);">
+              <li><b style="color:var(--parchment-200)">Eje "Horizontal"</b> — mover a Dian.</li>
+              <li><b style="color:var(--parchment-200)">Espacio</b> — saltar / doble salto si está habilitado.</li>
+              <li><b style="color:var(--parchment-200)">X</b> — iniciar animación de ataque.</li>
+              <li><b style="color:var(--parchment-200)">Flecha abajo</b> — acción de "recoger"/agacharse.</li>
+              <li><b style="color:var(--parchment-200)">E</b> — excavar.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:12px;">Menú y sistema</h4>
+            <ul style="padding-left:18px; font-size:14.5px; color:var(--ink-200);">
+              <li><b style="color:var(--parchment-200)">Escape</b> — pausar/reanudar durante el juego; volver al menú en pantalla de Game Over o Créditos.</li>
+              <li><b style="color:var(--parchment-200)">R</b> — reiniciar la escena tras un Game Over.</li>
+              <li><b style="color:var(--parchment-200)">M</b> — volver al menú tras un Game Over.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HUD -->
+    <section id="hud">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 11 · -80m</span></p>
+          <h2>HUD</h2>
+          <p>Elementos de interfaz código.</p>
+        </div>
+        <div class="grid-3">
+          <div class="card"><b style="color:var(--parchment-200)">Contenedor de corazones</b><p style="margin-top:8px; font-size:14px;">Fila de íconos de vida que se activan/desactivan según la vida actual del jugador.</p></div>
+          <div class="card"><b style="color:var(--parchment-200)">Panel de pausa</b><p style="margin-top:8px; font-size:14px;">Se activa/desactiva y congela el tiempo del juego (<code style="font-family:var(--font-mono)">Time.timeScale</code>).</p></div>
+          <div class="card"><b style="color:var(--parchment-200)">Panel de Game Over</b><p style="margin-top:8px; font-size:14px;">Muestra el texto "GAME OVER" con botones para reiniciar o volver al menú.</p></div>
+        </div>
+        <div class="callout todo" style="margin-top:20px;">Diseño visual definitivo del HUD: pendiente de documentación.</div>
+      </div>
+    </section>
+
+    <!-- CÓDIGO EXPLICADO DE FORMA SENCILLA -->
+    <section id="codigo-simple">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 11B · -84m</span></p>
+          <h2>Código explicado de forma sencilla</h2>
+          <p>Cuatro fragmentos que resumen cómo está armado el juego por dentro, explicados en lenguaje simple. No hace falta ser experto en Unity para seguirlos.</p>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:10px;">1. Cómo se mueve Dian</h4>
+          <p style="font-size:14.5px;">Cada fotograma, el juego lee si se está presionando la flecha izquierda o derecha y usa ese número para mover al personaje. También lanza un pequeño rayo invisible hacia abajo para saber si hay suelo debajo de los pies: si lo hay, Dian puede saltar.</p>
+          <pre><code class="language-csharp">float movimiento = Input.GetAxis("Horizontal");
+rb.velocity = new Vector2(movimiento * velocidad, rb.velocity.y);
+
+if (enSuelo &amp;&amp; Input.GetKeyDown(KeyCode.Space))
+{
+    rb.velocity = new Vector2(rb.velocity.x, fuerzaSalto);
+}</code></pre>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:10px;">2. Cómo funciona la vida del jugador</h4>
+          <p style="font-size:14.5px;">La vida vive en un solo lugar (<code style="font-family:var(--font-mono)">VidaJugador</code>). Cuando el jugador recibe daño, este script resta la vida y avisa a quien quiera enterarse mediante una "señal" (evento). El HUD de corazones está escuchando esa señal y se actualiza solo, sin que nadie tenga que decirle directamente "cambia de dibujo".</p>
+          <pre><code class="language-csharp">public Action&lt;int&gt; JugadorTomoDaño;
+
+public void TomarDaño(int daño)
+{
+    vidaActual = Mathf.Clamp(vidaActual - daño, 0, vidaMaxima);
+    JugadorTomoDaño?.Invoke(vidaActual); // avisa a los corazones del HUD
+}</code></pre>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:10px;">3. Cómo "piensan" los enemigos</h4>
+          <p style="font-size:14.5px;">Cada enemigo tiene solo tres estados posibles: <b style="color:var(--parchment-200)">esperando</b>, <b style="color:var(--parchment-200)">persiguiendo</b> y <b style="color:var(--parchment-200)">volviendo</b> a su punto de inicio. En cada fotograma, el juego simplemente pregunta "¿en qué estado estoy ahora?" y ejecuta el comportamiento de ese estado. Es la misma idea que un semáforo: solo puede estar en rojo, amarillo o verde, nunca en dos a la vez.</p>
+          <pre><code class="language-csharp">switch (estadoActual)
+{
+    case EstadosMovimiento.Esperando:  EstadoEsperando();  break;
+    case EstadosMovimiento.Siguiendo:  EstadoSiguiendo();  break;
+    case EstadosMovimiento.Volviendo:  EstadoVolviendo();  break;
+}</code></pre>
+        </div>
+
+        <div class="card">
+          <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:10px;">4. Un solo "director de partida" para todo el juego</h4>
+          <p style="font-size:14.5px;"><code style="font-family:var(--font-mono)">GameManager</code> se asegura de que exista una única copia de sí mismo en toda la partida (patrón llamado <i>singleton</i>). Así, cualquier script —sin importar en qué escena esté— puede llamar a <code style="font-family:var(--font-mono)">GameManager.Instance</code> para avisar un Game Over o pedir un reinicio, sin tener que arrastrar referencias manualmente en el Inspector.</p>
+          <pre><code class="language-csharp">public static GameManager Instance;
+
+void Awake()
+{
+    if (Instance == null) Instance = this;
+    else Destroy(gameObject); // evita copias duplicadas
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOS 4 PILARES DEL POO -->
+    <section id="poo">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 11C · -86m</span></p>
+          <h2>Los 4 pilares del POO</h2>
+          <p>Dian_Diggin está hecho en C#, un lenguaje orientado a objetos. Estos son los cuatro pilares de ese paradigma, cada uno con un ejemplo real tomado del proyecto.</p>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:10px;">1. Encapsulamiento</h4>
+          <p style="font-size:14.5px;">Consiste en ocultar los datos internos de un objeto y solo dejar que se modifiquen a través de métodos controlados, en vez de exponerlos libremente. En <code style="font-family:var(--font-mono)">VidaJugador</code>, la vida actual es <code style="font-family:var(--font-mono)">private</code>: nadie de afuera puede cambiarla directamente, solo puede pedirle al script que la modifique mediante <code style="font-family:var(--font-mono)">TomarDaño()</code> o <code style="font-family:var(--font-mono)">CurarVida()</code>, que se encargan de mantenerla siempre en un rango válido.</p>
+          <pre><code class="language-csharp">[SerializeField] private int vidaActual; // oculta, nadie la toca directo
+
+public int GetVidaActual() =&gt; vidaActual; // solo se puede leer
+public void TomarDaño(int daño) { /* la única forma de modificarla */ }</code></pre>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:10px;">2. Abstracción</h4>
+          <p style="font-size:14.5px;">Es mostrar solo lo esencial de un objeto y esconder los detalles complicados de cómo lo hace por dentro. Cualquier script puede llamar a <code style="font-family:var(--font-mono)">CurarVida(10)</code> sin saber (ni necesitar saber) que por dentro se está usando <code style="font-family:var(--font-mono)">Mathf.Clamp</code> o disparando un evento — solo le importa el resultado.</p>
+          <pre><code class="language-csharp">// Desde otro script, así de simple:
+vidaJugador.CurarVida(cantidadCuracion);
+// Lo de adentro (el cálculo, el límite, el aviso al HUD) queda oculto</code></pre>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:10px;">3. Herencia</h4>
+          <p style="font-size:14.5px;">Es cuando una clase toma las características de otra ya existente, para no repetir código desde cero. Todos los scripts del juego —<code style="font-family:var(--font-mono)">PlayerController</code>, <code style="font-family:var(--font-mono)">VidaJugador</code>, los enemigos, el <code style="font-family:var(--font-mono)">GameManager</code>— heredan de <code style="font-family:var(--font-mono)">MonoBehaviour</code>, la clase base de Unity. Gracias a eso, todos ganan automáticamente cosas como poder vivir en un GameObject, o recibir llamadas de <code style="font-family:var(--font-mono)">Start()</code> y <code style="font-family:var(--font-mono)">Update()</code> sin tener que programarlas desde cero.</p>
+          <pre><code class="language-csharp">public class PlayerController : MonoBehaviour { ... }
+public class VidaJugador     : MonoBehaviour { ... }
+public class GameManager     : MonoBehaviour { ... }
+// las tres heredan de la misma clase base de Unity</code></pre>
+        </div>
+
+        <div class="card">
+          <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:10px;">4. Polimorfismo</h4>
+          <p style="font-size:14.5px;">Significa que un mismo método "base" puede comportarse distinto según quién lo use. Todos los scripts heredan de <code style="font-family:var(--font-mono)">MonoBehaviour</code> los mismos métodos con nombre reservado (<code style="font-family:var(--font-mono)">Start()</code>, <code style="font-family:var(--font-mono)">Update()</code>), pero cada clase redefine ese método con su propio comportamiento: en <code style="font-family:var(--font-mono)">PlayerController</code>, <code style="font-family:var(--font-mono)">Update()</code> mueve al personaje; en <code style="font-family:var(--font-mono)">Creditos</code>, <code style="font-family:var(--font-mono)">Update()</code> solo escucha si se presiona Escape. Mismo nombre de método, comportamiento distinto en cada clase.</p>
+          <pre><code class="language-csharp">// PlayerController.cs
+void Update() { /* mueve al personaje, gestiona salto */ }
+
+// Creditos.cs
+void Update() { if (Input.GetKeyDown(KeyCode.Escape)) VolverMenu(); }</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ARQUITECTURA -->
+    <section id="arquitectura">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 12 · -88m</span></p>
+          <h2>Arquitectura del proyecto</h2>
+          <p>Cómo se relacionan los scripts entre sí, y qué patrones de diseño están realmente en uso.</p>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:12px;">Patrón observador para la vida del jugador</h4>
+          <p style="font-size:14.5px;"><code style="font-family:var(--font-mono)">VidaJugador</code> no conoce la existencia de la interfaz. Expone dos eventos públicos (<code style="font-family:var(--font-mono)">Action&lt;int&gt;</code>) y cualquier script interesado se suscribe. Esto mantiene el dato de vida desacoplado de su representación visual — un buen ejemplo de bajo acoplamiento dentro del proyecto (Principio de diseño que minimiza la interdependencia entre modulos o clases).</p>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:12px;">Duplicación entre los tres enemigos</h4>
+          <p style="font-size:14.5px;">La máquina de estados <code style="font-family:var(--font-mono)">Esperando/Siguiendo/Volviendo</code>, el giro hacia el objetivo y los Gizmos de depuración están prácticamente repetidos entre el murciélago, el gusano y el jefe. Es un caso natural para extraer una clase base común de la que los tres hereden, dejando en cada subclase solo su comportamiento distintivo (movimiento cinemático vs. por físicas, salto del jefe).</p>
+        </div>
+
+        <div class="card">
+          <h4 style="font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber-300); margin-bottom:12px;">Flujo de escenas</h4>
+          <p style="font-size:14.5px;">La progresión avanza por índice de escena (<code style="font-family:var(--font-mono)">buildIndex + 1</code>), controlada por <code style="font-family:var(--font-mono)">Buttons.play()</code> y <code style="font-family:var(--font-mono)">PasarNivel</code>. Esto significa que el orden de niveles depende enteramente del orden configurado en <i>Build Settings</i> del proyecto Unity, no de nombres de escena explícitos.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- MOTOR / BUILD -->
+    <section id="motor">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 13 · -96m</span></p>
+          <h2>Motor y build</h2>
+          </div>
+        <div class="grid-3">
+          <div class="card"><b style="color:var(--parchment-200)">Versión de Unity</b><p style="margin-top:8px; font-size:14px; font-family:var(--font-mono);">6000.0.47f1</p></div>
+          <div class="card"><b style="color:var(--parchment-200)">Backend de scripting</b><p style="margin-top:8px; font-size:14px; font-family:var(--font-mono);">Mono</p></div>
+          <div class="card"><b style="color:var(--parchment-200)">Plataforma de build</b><p style="margin-top:8px; font-size:14px; font-family:var(--font-mono);">Windows x64 · Visual Studio 2022 · Master (release)</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONCLUSIONES -->
+    <section id="conclusiones">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow"><span class="depth-tag">CAPA 14 · NÚCLEO · -104m</span></p>
+          <h2>Conclusiones</h2>
+        </div>
+        <div class="card">
+          <p style="font-size:15px;">El proyecto tiene una base sólida: separación razonable de responsabilidades, un patrón observador bien aplicado para la vida del jugador, y una máquina de estados de IA reconocible y consistente entre enemigos. El código está organizado en sistemas claros —movimiento, combate, vida, IA de enemigos e interfaz— lo que facilita seguir cómo funciona el juego de principio a fin.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="container" style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:14px;">
+        <span>Creado por dos estudiantes con ganas de tener buenas notas</span>
+        <span style="opacity:.5;">·</span>
+        <span style="font-family:var(--font-display); font-size:10px; color:var(--amber-400); letter-spacing:.04em;">es Dian</span>
+      </div>
+    </footer>
+
+  </main>
+</div>
+
+<!-- Lightbox (reservado para cuando existan sprites reales) -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<script>
+/* ============================================================
+   DATA — contenido íntegro y real de cada script del proyecto
+   ============================================================ */
+const SCRIPTS = [
+{
+  target:'scripts-personaje',
+  file:'PlayerController.cs', className:'PlayerController',
+  purpose:'Controla todo el movimiento y las acciones del personaje jugable: desplazamiento horizontal, salto y doble salto, detección de suelo, disparo de animaciones y reacción al recibir daño.',
+  how:'En cada Update, si el personaje no está atacando, lee el eje "Horizontal" y lo aplica directamente a la velocidad del Rigidbody2D, voltea la escala del objeto según la dirección, y lanza un raycast hacia abajo para saber si está tocando el suelo (capaSuelo). Ese resultado habilita el salto normal y resetea el doble salto. Espacio dispara un impulso de fuerza hacia arriba, ya sea desde el suelo o, si puedeDobleSpermitido está activo y aún queda una carga, en el aire. Las teclas de flecha abajo, E y X activan banderas booleanas (down, Excavando, Atacando) que luego se envían al Animator como parámetros.',
+  vars:[
+    ['velocidad / fuerzaSalto / fuerzaRebote','Ajustan la velocidad de movimiento, la fuerza del salto y la fuerza del rebote al recibir daño.'],
+    ['longitudRaycast / capaSuelo','Definen el alcance y la capa física usados para detectar si Dian está tocando el suelo.'],
+    ['puedeDobleSpermitido','Interruptor de diseño: habilita o deshabilita el doble salto para todo el personaje.'],
+    ['puedeDobleS / enSuelo','Estado interno: si aún queda una carga de doble salto disponible, y si el raycast detecta suelo.'],
+    ['Atacando / down / Excavando / recibiendoodanio','Banderas de estado que controlan qué animación se reproduce y si el movimiento normal está bloqueado.']
+  ],
+  funcs:[
+    ['Update()','Bucle principal: lee input, mueve al personaje, gestiona salto/doble salto y actualiza los parámetros del Animator.'],
+    ['RecibeDanio(direccion, cantDanio)','Llamado por el enemigo al hacer contacto. Activa la bandera de daño y aplica un impulso de rebote alejando al jugador del atacante.'],
+    ['Desactivadanio()','Apaga la bandera de daño y detiene la velocidad — pensado para llamarse al final de la animación de golpe.'],
+    ['atacando() / NoAtacando() / downing() / NoDowning() / Excavandoo() / NoExcavandoo()','Pares de funciones públicas para activar/desactivar cada estado, normalmente invocadas desde eventos de animación.']
+  ],
+  interactions:['Lee el estado del suelo con un Raycast propio (no depende de otro script).','Es el objetivo de <code>DañoAjugador</code> y <code>DañoAJugadorGus</code>, que llaman a <code>RecibeDanio()</code>.'],
+  components:['Rigidbody2D','Animator','Physics2D.Raycast','Gizmos'],
+  events:['Start','Update','OnDrawGizmos'],
+  good:['Separación clara entre lectura de input y aplicación de físicas dentro del mismo método, fácil de seguir.','Uso de Gizmos para visualizar el raycast de suelo en el editor.'],
+  improve:[
+    '<b>Posible error de tipeo:</b> <code>animator.SetFloat("ovement", ...)</code> — falta la letra inicial de "movement"; conviene confirmar que el parámetro del Animator se llama igual.',
+    'El movimiento y las fuerzas se aplican dentro de <code>Update()</code>; moverlos a <code>FixedUpdate()</code> evita inconsistencias en distintos framerates.',
+    'El raycast de suelo es un único rayo desde el centro — en bordes de plataforma puede dar falsos negativos.'
+  ],
+  code:`using System;
+using UnityEngine;
+
+public class PlayerController : MonoBehaviour
+{
+    public float velocidad = 5f;
+    public float fuerzaSalto = 6f;
+    public float fuerzaRebote = 10f;
+
+    public float longitudRaycast = 0.2f;
+    public LayerMask capaSuelo;
+
+    [Header("Doble Salto")]
+    public bool puedeDobleSpermitido = false;
+
+    private bool puedeDobleS = false;
+    private bool enSuelo;
+    
+    private bool Atacando;
+    private bool down;
+    private bool Excavando;
+    public bool recibiendoodanio;
+  
+    private Rigidbody2D rb;
+    private Animator animator;
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+
+        
+    }
+
+    void Update()
+    {
+        if (!Atacando)
+        {
+            // MOVIMIENTO HORIZONTAL (FÍSICAS)
+            float velocidadX = Input.GetAxis("Horizontal");
+            rb.linearVelocity = new Vector2(velocidadX * velocidad, rb.linearVelocity.y);
+
+            animator.SetFloat("ovement", Mathf.Abs(velocidadX));
+
+            if (velocidadX > 0)
+                transform.localScale = new Vector3(1, 1, 1);
+            else if (velocidadX < 0)
+                transform.localScale = new Vector3(-1, 1, 1);
+
+            // RAYCAST SUELO
+            RaycastHit2D hit = Physics2D.Raycast(
+                transform.position,
+                Vector2.down,
+                longitudRaycast,
+                capaSuelo
+            );
+
+            enSuelo = hit.collider != null;
+
+            // RESET DOBLE SALTO
+            if (enSuelo)
+            {
+                puedeDobleS = true;
+            }
+
+            // SALTO + DOBLE SALTO
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                if (enSuelo)
+                {
+                    rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+                    rb.AddForce(Vector2.up * fuerzaSalto, ForceMode2D.Impulse);
+                }
+                else if (puedeDobleSpermitido && puedeDobleS)
+                {
+                    rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+                    rb.AddForce(Vector2.up * fuerzaSalto, ForceMode2D.Impulse);
+                    puedeDobleS = false;
+                }
+            }
+
+            // ACCIONES EXTRA
+            if (Input.GetKeyDown(KeyCode.DownArrow) && !down)
+                downing();
+
+            if (Input.GetKeyDown(KeyCode.E) && !Excavando)
+                Excavandoo();
+        }
+
+        // ANIMACIONES
+        animator.SetBool("ensuelo", enSuelo);
+        animator.SetBool("atacando", Atacando);
+        animator.SetBool("recoger", down);
+        animator.SetBool("excava", Excavando);
+        animator.SetBool ("recibedanio", recibiendoodanio);
+
+        if (Input.GetKeyDown(KeyCode.X) && !Atacando)
+            atacando();
+    }
+
+    public void RecibeDanio(Vector2 direccion, int cantDanio)
+    {
+        recibiendoodanio = true;
+        Vector2 rebote = new Vector2(transform.position.x - direccion.x, 1).normalized;
+        rb.AddForce(rebote*fuerzaRebote, ForceMode2D. Impulse);
+    }
+
+    public void Desactivadanio()
+    {
+        recibiendoodanio = false;
+        rb.linearVelocity = Vector2.zero;
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(transform.position, transform.position + Vector3.down * longitudRaycast);
+    }
+
+
+
+    public void atacando()
+    {
+        Atacando = true;
+    }
+
+    public void NoAtacando()
+    {
+        Atacando = false;
+    }
+
+    public void downing()
+    {
+        down = true;
+    }
+
+    public void NoDowning()
+    {
+        down = false;
+    }
+
+    public void Excavandoo()
+    {
+        Excavando = true;
+    }
+
+    public void NoExcavandoo()
+    {
+        Excavando = false;
+    }
+}`
+},
+{
+  target:'scripts-vida',
+  file:'VidaJugador.cs', className:'VidaJugador',
+  purpose:'Es la única fuente de verdad sobre cuánta vida tiene el jugador. Aplica daño y curación, y notifica a quien esté escuchando mediante eventos.',
+  how:'Al despertar, iguala la vida actual a la vida máxima. TomarDaño() resta la cantidad indicada, la limita entre 0 y el máximo con Mathf.Clamp, dispara el evento JugadorTomoDaño con el nuevo valor, y si la vida llega a 0 destruye al jugador y avisa al GameManager de un Game Over. CurarVida() hace el mismo tipo de cálculo en sentido contrario y dispara JugadorSeCuro.',
+  vars:[
+    ['JugadorTomoDaño / JugadorSeCuro','Eventos públicos (Action&lt;int&gt;) a los que cualquier script puede suscribirse para reaccionar a cambios de vida.'],
+    ['vidaMaxima / vidaActual','Los dos únicos números que definen el estado de vida del jugador.'],
+    ['recibiendoDanio / die','Banderas declaradas para controlar estado adicional; <code>die</code> actualmente no se usa en ninguna condición.']
+  ],
+  funcs:[
+    ['TomarDaño(daño)','Resta vida, la limita al rango válido, notifica a los suscriptores y gestiona la muerte del jugador.'],
+    ['CurarVida(curacion)','Suma vida, la limita al máximo y notifica a los suscriptores.'],
+    ['DestruirJugador()','Destruye el GameObject del jugador.'],
+    ['GetVidaMaxima() / GetVidaActual()','Accesores de solo lectura para que otros scripts consulten el estado sin poder modificarlo directamente.']
+  ],
+  interactions:['<code>ContenedorCorazones</code> se suscribe a sus eventos para refrescar el HUD.','<code>CurarAlTocar</code> llama a <code>CurarVida()</code>.','<code>DañoAjugador</code> llama a <code>TomarDaño()</code>.','Notifica a <code>GameManager.Instance.GameOver()</code> cuando la vida llega a cero.'],
+  components:['Ninguno específico de Unity más allá de MonoBehaviour — es un script de datos puro.'],
+  events:['Awake'],
+  good:['Uso de eventos (Action&lt;int&gt;) para desacoplar el dato de vida de su representación visual.','Uso de Mathf.Clamp para blindar el rango de vida en ambas direcciones.','Chequeo con <code>?.Invoke()</code> para no fallar si nadie está suscrito.'],
+  improve:[
+    'El <code>using System.Numerics;</code> no se usa en el archivo y puede provocar ambigüedad si en el futuro se declara un <code>Vector2</code>, ya que ese namespace también define uno propio distinto al de UnityEngine.',
+    'La variable <code>die</code> está declarada pero nunca se usa; podría servir como guardia para ignorar daño adicional una vez que el jugador ya inició su secuencia de muerte.'
+  ],
+  code:`using System;
+using System.Numerics;
+using UnityEngine;
+
+public class VidaJugador : MonoBehaviour
+{
+    public Action<int> JugadorTomoDaño; //señales que algun proceso escuchara
+    public Action<int> JugadorSeCuro; //señales que algun proceso escuchara
+
+    [SerializeField] private int vidaMaxima;
+    [SerializeField] private int vidaActual;
+    private bool recibiendoDanio;
+    private bool die;
+
+    
+
+    private void Awake()
+    {
+        vidaActual = vidaMaxima;
+    }
+
+    public void TomarDaño( int daño)
+    {
+        recibiendoDanio = true;
+       
+        int vidaTemporal = vidaActual - daño;
+
+        vidaTemporal = Mathf.Clamp(vidaTemporal, 0, vidaMaxima);
+
+        vidaActual = vidaTemporal;
+
+        JugadorTomoDaño?.Invoke(vidaActual); //enviara una señal a cualquier proceso que lo necesite, ? es por si nadie lo recibe nadie lo reciba
+
+        if (vidaActual <= 0)
+        {
+            DestruirJugador();
+
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.GameOver();
+            }
+        }
+    }
+
+    private void DestruirJugador()
+    {
+        Destroy(gameObject);
+    }
+
+    public void CurarVida(int curacion)
+    {
+        int vidaTemporal = vidaActual + curacion;
+
+        vidaTemporal = Mathf.Clamp(vidaTemporal, 0, vidaMaxima);
+
+        vidaActual = vidaTemporal;
+
+        JugadorSeCuro?.Invoke(vidaActual);
+    }
+
+    public int GetVidaMaxima() => vidaMaxima;
+    public int GetVidaActual() => vidaActual;
+}`
+},
+{
+  target:'scripts-vida',
+  file:'ContenedorCorazones.cs', className:'ContenedorCorazones',
+  purpose:'Traduce el número de vida actual del jugador en qué íconos de corazón deben verse activos o inactivos.',
+  how:'En Start busca automáticamente a VidaJugador si no fue asignado en el Inspector, se suscribe a sus dos eventos, y llama una vez a ActivarCorazones() para inicializar el HUD con la vida actual. ActivarCorazones() recorre el arreglo de corazones y activa los que están por debajo de la vida actual, desactivando el resto — evitando llamadas redundantes cuando un corazón ya está en el estado correcto.',
+  vars:[
+    ['corazones','Arreglo de referencias a cada ícono individual de corazón en el HUD.'],
+    ['vidaJugador','Referencia al script dueño del dato de vida; se autocompleta si se deja vacío.']
+  ],
+  funcs:[
+    ['Start()','Se suscribe a los eventos de vida y sincroniza el HUD con el valor inicial.'],
+    ['OnDisable()','Se desuscribe de los eventos de forma segura para evitar errores al cambiar de escena o al destruirse el jugador.'],
+    ['ActivarCorazones(vidaActual)','Recorre el arreglo de corazones y activa/desactiva cada uno según corresponda.']
+  ],
+  interactions:['Se suscribe a <code>VidaJugador.JugadorTomoDaño</code> y <code>VidaJugador.JugadorSeCuro</code>.','Llama a <code>ActivarCorazon()</code> / <code>DesactivarCorazon()</code> de cada <code>CorazonUI</code>.'],
+  components:['FindFirstObjectByType (búsqueda automática de referencia)'],
+  events:['Start','OnDisable'],
+  good:['Comentario explícito documentando por qué se valida null antes de desuscribirse — señal de que el equipo ya depuró un bug real de consola.','Evita llamadas innecesarias comprobando el estado actual antes de activar/desactivar cada corazón.'],
+  improve:['Si <code>corazones.Length</code> es menor que la vida máxima del jugador, el HUD simplemente no reflejará la vida sobrante sin ningún aviso; valdría la pena un <code>Debug.Assert</code> que lo detecte en desarrollo.'],
+  code:`using System;
+using UnityEngine;
+
+public class ContenedorCorazones : MonoBehaviour
+{
+    [SerializeField] private CorazonUI[] corazones;
+    [SerializeField] private VidaJugador vidaJugador;
+
+    private void Start()
+    {
+        // Si no lo arrastraste en el Inspector, búscalo automáticamente
+        if (vidaJugador == null)
+        {
+            vidaJugador = FindFirstObjectByType<VidaJugador>();
+        }
+
+        if (vidaJugador != null)
+        {
+            // Receptores de señal (Suscribirse)
+            vidaJugador.JugadorTomoDaño += ActivarCorazones; 
+            vidaJugador.JugadorSeCuro += ActivarCorazones; 
+
+            // Inicializa los corazones con la vida que tiene el jugador al empezar
+            ActivarCorazones(vidaJugador.GetVidaActual());
+        }
+        else
+        {
+            Debug.LogError("¡No se encontró el script VidaJugador en la escena!");
+        }
+    }
+
+    private void OnDisable()
+    {
+        // CORRECCIÓN: Validamos que el jugador todavía exista antes de desuscribirnos 
+        // para evitar errores de consola al cambiar de escena o al morir.
+        if (vidaJugador != null)
+        {
+            vidaJugador.JugadorTomoDaño -= ActivarCorazones; 
+            vidaJugador.JugadorSeCuro -= ActivarCorazones; 
+        }
+    }
+
+    private void ActivarCorazones(int vidaActual)
+    {
+        for (int i = 0; i < corazones.Length; i++)
+        {
+            if (i < vidaActual)
+            {
+
+                if(corazones[i].EstaActivo()){continue;}
+                corazones[i].ActivarCorazon();
+            }
+            else
+            {
+                if(!corazones[i].EstaActivo()){continue;}
+                corazones[i].DesactivarCorazon();
+            }
+        }
+    }
+}`
+},
+{
+  target:'scripts-vida',
+  file:'CorazonUI.cs', className:'CorazonUI',
+  purpose:'Representa un único ícono de corazón: guarda si está activo y reproduce su animación de apagado.',
+  how:'Es deliberadamente simple: solo cambia una bandera interna y, al desactivarse, dispara un trigger de animación.',
+  vars:[
+    ['animator','Referencia al Animator de este corazón individual.'],
+    ['estaActivo','Estado actual del corazón (visible/vivo o no).']
+  ],
+  funcs:[
+    ['ActivarCorazon()','Marca el corazón como activo.'],
+    ['DesactivarCorazon()','Dispara la animación "des" y marca el corazón como inactivo.'],
+    ['EstaActivo()','Expone el estado actual de solo lectura para que ContenedorCorazones evite llamadas redundantes.']
+  ],
+  interactions:['Es controlado exclusivamente por <code>ContenedorCorazones</code>.'],
+  components:['Animator (SetTrigger)'],
+  events:['Ninguno propio — expone métodos públicos que otro script invoca.'],
+  good:['Responsabilidad única y bien acotada: este script no sabe nada sobre vida ni sobre otros corazones.'],
+  improve:['<code>ActivarCorazon()</code> no dispara ningún trigger de animación equivalente a "des"; si se busca una entrada animada simétrica a la salida, falta ese disparo.'],
+  code:`using UnityEngine;
+
+
+public class CorazonUI : MonoBehaviour
+{
+    [SerializeField] private Animator animator;
+    
+    [SerializeField] private bool estaActivo;
+
+    public void ActivarCorazon()
+    {
+        estaActivo = true;
+       
+    }
+
+    public void DesactivarCorazon()
+    {
+        animator.SetTrigger("des");
+        estaActivo = false;
+       
+    }
+
+    public bool EstaActivo() => estaActivo;
+}`
+},
+{
+  target:'scripts-vida',
+  file:'CurarAlTocar.cs', className:'CurarAlTocar',
+  purpose:'Cura al jugador cuando toca un objeto que lleva este componente (por ejemplo, un ítem de curación en el nivel).',
+  how:'Cuando algo entra en su collider de trigger, comprueba si ese objeto tiene un VidaJugador y, si es así, le suma vida por la cantidad configurada.',
+  vars:[['cantidadCuracion','Cuánta vida restaura este objeto al ser tocado.']],
+  funcs:[['OnTriggerEnter2D(collision)','Evento de físicas de Unity: detecta el contacto y aplica la curación si el objeto tocado es el jugador.']],
+  interactions:['Llama a <code>VidaJugador.CurarVida()</code>.'],
+  components:['Collider2D (trigger)'],
+  events:['OnTriggerEnter2D'],
+  good:['Uso correcto de <code>TryGetComponent</code> en vez de <code>GetComponent</code> + comprobación manual de null.'],
+  improve:['El objeto de curación no se destruye ni desactiva después de curar; si se vuelve a tocar (saliendo y entrando de nuevo del trigger), cura otra vez de forma indefinida. Un ítem consumible normalmente debería desaparecer tras usarse.'],
+  code:`using UnityEngine;
+
+public class CurarAlTocar : MonoBehaviour
+{
+    [SerializeField] private int cantidadCuracion;
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.TryGetComponent(out VidaJugador vidaJugador))
+        {
+            vidaJugador.CurarVida(cantidadCuracion);
+        }
+    }
+}`
+},
+{
+  target:'scripts-combate',
+  file:'Ataquejugador.cs', className:'AtaqueJugador',
+  purpose:'Detecta cuándo el jugador presiona el botón de ataque y aplica daño a todos los enemigos dentro de un radio, respetando un tiempo de espera entre golpes.',
+  how:'Cada frame revisa si se presionó "Fire1". Si es así, comprueba si ya pasó el tiempo mínimo desde el último ataque (comparando Time.time). Si el cooldown ya pasó, ejecuta Atacar(): guarda el instante actual, busca con OverlapCircleAll todos los colliders dentro del radio de ataque, y a cada uno que tenga un VidaEnemigo le aplica el daño configurado.',
+  vars:[
+    ['controladorAtaque','Punto de referencia (Transform) desde donde se mide el radio de ataque — normalmente un hijo vacío frente al personaje.'],
+    ['radioAtaque','Alcance del golpe.'],
+    ['dañoAtaque','Cantidad de daño aplicado por golpe.'],
+    ['tiempoEntreAtaques / tiempoUltimoAtaque','Controlan el cooldown entre ataques consecutivos.']
+  ],
+  funcs:[
+    ['Update()','Escucha el botón de ataque cada frame.'],
+    ['IntentarAtacar()','Filtra el ataque si aún no pasó el tiempo de espera configurado.'],
+    ['Atacar()','Ejecuta el golpe real: detecta enemigos en el radio y les aplica daño.']
+  ],
+  interactions:['Llama a <code>VidaEnemigo.TomarDaño()</code> de cada enemigo detectado.'],
+  components:['Physics2D.OverlapCircleAll','Gizmos'],
+  events:['Update','OnDrawGizmos'],
+  good:['Cooldown implementado con <code>Time.time</code> en vez de corrutinas, simple y eficiente.','Uso de <code>TryGetComponent</code> dentro del recorrido de colliders.','Gizmo del radio de ataque visible en el editor para ajustar el diseño.'],
+  improve:['El disparo de la animación de ataque vive en <code>PlayerController</code> (tecla X) mientras que el daño real depende de un botón distinto ("Fire1") en este script; vale la pena confirmar que ambos están sincronizados por diseño y no son dos sistemas de ataque paralelos sin querer.'],
+  code:`using UnityEngine;
+
+public class AtaqueJugador : MonoBehaviour
+{
+
+    [SerializeField] private Transform controladorAtaque;
+    [SerializeField] private float radioAtaque;
+    [SerializeField] private int dañoAtaque;
+    [SerializeField] private float tiempoEntreAtaques;
+    [SerializeField] private float tiempoUltimoAtaque;
+    private void Update()
+    {
+        if (Input.GetButtonDown("Fire1"))
+        {
+            IntentarAtacar();
+        }
+    }
+
+    private void IntentarAtacar()
+    {
+        if (Time.time < tiempoUltimoAtaque + tiempoEntreAtaques) { return; }
+            Atacar();
+    }
+
+    private void Atacar()
+
+    {
+        tiempoUltimoAtaque = Time.time; //tiempo que el juego lleva en ejecución
+
+        Collider2D[] objetosTocados = Physics2D.OverlapCircleAll(controladorAtaque.position, radioAtaque);
+
+        foreach (Collider2D objeto in objetosTocados)
+        {
+            if (objeto.TryGetComponent(out VidaEnemigo vidaEnemigo)) //toma el componente de un objeto
+            {
+                vidaEnemigo.TomarDaño(dañoAtaque);
+            }
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(controladorAtaque.position, radioAtaque);
+    }
+}`
+},
+{
+  target:'scripts-combate',
+  file:'DañoAjugador.cs', className:'DañoAJugador',
+  purpose:'Aplica daño y rebote al jugador cuando un enemigo con este componente lo toca.',
+  how:'Al detectar contacto con el jugador, le resta vida y además llama directamente a RecibeDanio() en su PlayerController para aplicar el rebote en dirección contraria al enemigo.',
+  vars:[['dañoPorToque','Cantidad de daño aplicado por contacto.']],
+  funcs:[['OnTriggerEnter2D(collision)','Detecta el contacto con el jugador, le aplica daño y dispara el rebote.']],
+  interactions:['Llama a <code>VidaJugador.TomarDaño()</code> y a <code>PlayerController.RecibeDanio()</code>.'],
+  components:['Collider2D (trigger)'],
+  events:['OnTriggerEnter2D'],
+  good:['Combina dos efectos (daño + rebote físico) en una única detección de contacto, evitando lógica duplicada.'],
+  improve:['Usa <code>GetComponent</code> directo para <code>PlayerController</code> sin comprobar null; si algún día un objeto con <code>VidaJugador</code> no tuviera <code>PlayerController</code>, lanzaría una excepción.'],
+  code:`using UnityEngine;
+
+public class DañoAJugador : MonoBehaviour
+{
+    [SerializeField] private int dañoPorToque;
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.TryGetComponent(out VidaJugador vidaJugador))
+        {
+            vidaJugador.TomarDaño(dañoPorToque);
+            Vector2 direcciondanio = new Vector2(transform.position.x, 0);
+            collision.gameObject.GetComponent<PlayerController>().RecibeDanio(direcciondanio, 1);
+        }
+    }
+}`
+},
+{
+  target:'scripts-combate',
+  file:'DañoAJugadorGus.cs', className:'DañoAJugadorGus',
+  purpose:'Variante de daño por contacto pensada, a juzgar por su nombre, para el enemigo "Gusano".',
+  how:'Intenta aplicar daño al jugador cuando entra en contacto, replicando la idea de DañoAjugador pero sin el rebote.',
+  vars:[['dañoPorToque','Cantidad de daño configurada para este enemigo.']],
+  funcs:[['Collider2D(collision)','Método declarado con la intención de reaccionar a un trigger de físicas.']],
+  interactions:['Debería llamar a <code>VidaJugador.TomarDaño()</code>, igual que <code>DañoAjugador</code>.'],
+  components:['Collider2D'],
+  events:['Ninguno registrado realmente — ver bug abajo.'],
+  good:['La intención y estructura interna son correctas: usa <code>TryGetComponent</code> igual que el resto del proyecto.'],
+  improve:['<b>Bug crítico:</b> el método se llama <code>Collider2D(Collider2D collision)</code> en vez de <code>OnTriggerEnter2D(Collider2D collision)</code>. Unity solo invoca automáticamente métodos con nombres de evento reservados; al no coincidir el nombre, este método nunca se ejecuta y el enemigo que use este script no hará daño al tocar al jugador.'],
+  code:`using UnityEngine;
+
+public class DañoAJugadorGus : MonoBehaviour
+{
+    [SerializeField] private int dañoPorToque;
+
+    private void Collider2D (Collider2D collision)
+    {
+        if (collision.TryGetComponent(out VidaJugador vidaJugador))
+        {
+            vidaJugador.TomarDaño(dañoPorToque);
+        }
+    }
+}
+`
+},
+{
+  target:'scripts-combate',
+  file:'VidaEnemigo.cs', className:'VidaEnemigo',
+  purpose:'Equivalente a VidaJugador pero para los enemigos: guarda su vida, la reduce al recibir daño y gestiona su destrucción.',
+  how:'Al recibir daño, resta vida, la limita al rango válido, y si llega a cero destruye al enemigo y marca la bandera de muerte. Al final intenta actualizar dos parámetros del Animator para reflejar el golpe y la muerte.',
+  vars:[
+    ['animator','Referencia al Animator del enemigo — declarada pero nunca asignada (ver bug).'],
+    ['damage / muelte','Banderas de estado para las animaciones de "recibir golpe" y "muerte".'],
+    ['vidaMaxima / vidaActual','Vida del enemigo, con el mismo patrón de Mathf.Clamp que VidaJugador.']
+  ],
+  funcs:[
+    ['TomarDaño(cantidadDeDaño)','Resta vida, destruye al enemigo si llega a cero, e intenta actualizar el Animator.'],
+    ['muere() / daño() / desactivadaño()','Métodos públicos auxiliares para forzar cada bandera de estado, probablemente pensados para invocarse desde eventos de animación.']
+  ],
+  interactions:['Es el objetivo de <code>AtaqueJugador.Atacar()</code>, que llama a <code>TomarDaño()</code>.'],
+  components:['Animator (SetBool) — sin asignar en tiempo de ejecución.'],
+  events:['Awake'],
+  good:['Reutiliza el mismo patrón de Mathf.Clamp que VidaJugador, manteniendo consistencia en el proyecto.'],
+  improve:[
+    '<b>Bug crítico:</b> <code>animator</code> nunca se asigna con <code>GetComponent&lt;Animator&gt;()</code>. Como <code>TomarDaño()</code> lo usa sin comprobar null, se lanzará una excepción de referencia nula en cada golpe recibido — la muerte del enemigo sigue funcionando porque <code>Destroy()</code> ya se ejecutó antes, pero las animaciones de daño y muerte nunca llegan a dispararse con éxito.',
+    'El import <code>using JetBrains.Annotations;</code> no se utiliza en el archivo.'
+  ],
+  code:`using JetBrains.Annotations;
+using UnityEngine;
+
+public class VidaEnemigo : MonoBehaviour
+{
+
+    private Animator animator;
+    private bool damage;
+    private bool muelte;
+    [SerializeField] private int vidaMaxima;
+    [SerializeField] private int vidaActual;
+
+    private void Awake()
+    {
+        vidaActual = vidaMaxima;
+    }
+
+    public void TomarDaño(int cantidadDeDaño)
+    {
+        damage = true;
+        int cantidadDeVidaTemporal = vidaActual - cantidadDeDaño;
+
+        cantidadDeVidaTemporal = Mathf.Clamp(cantidadDeVidaTemporal, 0, vidaMaxima); // hace la función de un if, toma el valor del primer parametro y le pone el rango de los siguientes dos (2do el minim., 3ro el max.)
+
+        vidaActual = cantidadDeVidaTemporal;
+
+        if (vidaActual == 0 )
+        {
+            Destroy(gameObject);
+            muelte = true;
+        }
+
+        animator.SetBool("dam", damage);
+        animator.SetBool("MUELTO", muelte);
+    }
+
+        public void muere()
+        {
+            muelte = true;
+        }
+
+        public void daño()
+    {
+        damage = true;
+    }
+    public void desactivadaño()
+    {
+        damage = false;
+    }
+
+    }
+`
+},
+{
+  target:'scripts-enemigos',
+  file:'Murielago.cs', className:'SeguirJugadorArea',
+  purpose:'Inteligencia artificial del enemigo murciélago: detecta al jugador, lo persigue y vuelve a su punto de origen si lo pierde de vista.',
+  how:'Una máquina de estados con tres fases controla todo el comportamiento. En Esperando, un OverlapCircle comprueba si el jugador entró en el radio de búsqueda. En Siguiendo, se mueve directamente hacia el jugador con MoveTowards (movimiento cinemático, sin físicas) y gira para mirarlo; si se aleja demasiado del punto inicial o del jugador, pasa a Volviendo. En Volviendo, regresa al punto de partida hasta quedar prácticamente encima de él, y vuelve a Esperando.',
+  vars:[
+    ['radioBusqueda / capaJugador','Definen dónde y a quién puede detectar el murciélago.'],
+    ['velocidadMovimiento / distanciaMaxima','Velocidad de persecución y límite antes de forzar el regreso.'],
+    ['puntoInicial','Posición de origen a la que siempre vuelve.'],
+    ['mirandoDerecha','Controla la orientación visual del sprite.'],
+    ['estadoActual','Estado activo de la máquina de tres fases.']
+  ],
+  funcs:[
+    ['EstadoEsperando()','Busca al jugador dentro del radio de detección.'],
+    ['EstadoSiguiendo()','Persigue al jugador y evalúa si debe volver.'],
+    ['EstadoVolviendo()','Regresa al punto de origen.'],
+    ['GirarAObjetivo(objetivo) / Girar()','Orientan al murciélago hacia el objetivo actual.']
+  ],
+  interactions:['Detecta al jugador únicamente por capa física (LayerMask), sin depender directamente de PlayerController.'],
+  components:['Physics2D.OverlapCircle','Vector2.MoveTowards','Gizmos'],
+  events:['Start','Update','OnDrawGizmos'],
+  good:['Máquina de estados clara con un enum legible.','Gizmos para depurar visualmente el radio de búsqueda y la distancia máxima.'],
+  improve:['Comparte casi todo su código con <code>EnemyContoller</code> (Gusano) y <code>JefeBoss</code>; es un candidato natural para una clase base común (ver sección de Arquitectura).'],
+  code:`using UnityEngine;
+
+public class SeguirJugadorArea : MonoBehaviour
+{
+    public float radioBusqueda;
+    public LayerMask capaJugador;
+    public Transform transformJugador;
+    public float velocidadMovimiento;
+    public float distanciaMaxima;
+    public Vector3 puntoInicial;
+    public bool mirandoDerecha;
+
+    public EstadosMovimiento estadoActual;
+    public enum EstadosMovimiento
+    {
+        Esperando,
+        Siguiendo,
+        Volviendo,
+    }
+    void Start()
+    {
+        puntoInicial = transform.position;
+    }
+
+    
+    void Update()
+    {
+        switch (estadoActual)
+        {
+            case EstadosMovimiento.Esperando:
+                EstadoEsperando();
+                break;
+            case EstadosMovimiento.Siguiendo:
+                EstadoSiguiendo();
+                break;
+            case EstadosMovimiento.Volviendo:
+                EstadoVolviendo();
+                break;
+
+        }
+
+        
+    }
+
+    private void EstadoEsperando()
+    {
+        Collider2D jugadorCollider = Physics2D.OverlapCircle(transform.position, radioBusqueda, capaJugador);
+        if (jugadorCollider)
+        {
+            transformJugador = jugadorCollider.transform;
+
+            estadoActual = EstadosMovimiento.Siguiendo;
+        }
+    }
+
+    private void EstadoSiguiendo()
+    {
+        if (transformJugador == null)
+        {
+            estadoActual = EstadosMovimiento.Volviendo;
+            return;
+        }
+
+        transform.position = Vector2.MoveTowards(transform.position, transformJugador.position, velocidadMovimiento * Time.deltaTime);
+
+        GirarAObjetivo(transformJugador.position);
+
+        if(Vector2.Distance(transform.position, puntoInicial) > distanciaMaxima || Vector2.Distance(transform.position, transformJugador.position) > distanciaMaxima)
+        {
+            estadoActual = EstadosMovimiento.Volviendo;
+            transformJugador = null;
+        }
+    }
+
+    private void EstadoVolviendo()
+    {
+        transform.position = Vector2.MoveTowards(transform.position, puntoInicial, velocidadMovimiento * Time.deltaTime);
+
+        GirarAObjetivo (puntoInicial);
+
+        if(Vector2.Distance(transform.position, puntoInicial) < 0.1f)
+        {
+            estadoActual = EstadosMovimiento.Esperando;
+        }
+    }
+
+    private void GirarAObjetivo(Vector3 objetivo)
+    {
+        if (objetivo.x > transform.position.x && !mirandoDerecha)
+        {
+            Girar();
+        }else if (objetivo.x < transform.position.x && mirandoDerecha)
+        {
+            Girar();
+        }
+    }
+
+    private void Girar()
+    {
+        mirandoDerecha = !mirandoDerecha;
+        transform.eulerAngles = new Vector3(0, transform.eulerAngles.y + 180, 0);
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, radioBusqueda);
+        Gizmos.DrawWireSphere(puntoInicial, distanciaMaxima);
+    }
+}`
+},
+{
+  target:'scripts-enemigos',
+  file:'EnemyContoller.cs', className:'Gusano',
+  purpose:'Inteligencia artificial del enemigo gusano: misma máquina de tres estados que el murciélago, pero moviéndose mediante físicas (Rigidbody2D) en vez de desplazamiento directo.',
+  how:'Idéntico en estructura a SeguirJugadorArea, con una diferencia clave: en vez de MoveTowards, fija la velocidad horizontal del Rigidbody2D hacia el objetivo, lo que permite que el gusano respete colisiones y gravedad mientras persigue o regresa.',
+  vars:[
+    ['rb2D','Rigidbody2D usado para mover al gusano respetando físicas.'],
+    ['animator','Controla el parámetro "Corriendo" de la animación de movimiento.'],
+    ['(resto de variables)','Comparten propósito exacto con las de SeguirJugadorArea: radio de búsqueda, distancia máxima, punto inicial, orientación y estado.']
+  ],
+  funcs:[
+    ['EstadoEsperando() / EstadoSiguiendo() / EstadoVolviendo()','Misma máquina de estados que el murciélago, adaptada a movimiento por velocidad de Rigidbody2D.'],
+    ['GirarAObjetivo(objetivo) / Girar()','Idénticas a las del murciélago.']
+  ],
+  interactions:['Mismo patrón de detección por LayerMask que SeguirJugadorArea.'],
+  components:['Rigidbody2D','Physics2D.OverlapCircle','Animator','Gizmos'],
+  events:['Start','Update','OnDrawGizmos'],
+  good:['Chequeo de suelo mediante físicas reales en vez de teletransporte, más coherente si el nivel tiene colisiones o desniveles.'],
+  improve:['La línea <code>animator.SetBool("Corriendo", true)</code> dentro de <code>EstadoSiguiendo()</code> está comentada, mientras que su contraparte en falso sí se ejecuta en <code>EstadoVolviendo()</code>. En la práctica, el parámetro "Corriendo" nunca llega a activarse, solo a apagarse — la animación de correr probablemente no se reproduce mientras el gusano persigue al jugador.'],
+  code:`using UnityEngine;
+
+public class Gusano : MonoBehaviour
+{
+    public float radioBusqueda;
+    public LayerMask capaJugador;
+    public Transform transformJugador;
+    public float velocidadMovimiento;
+    public float distanciaMaxima;
+    public Vector3 puntoInicial;
+    public bool mirandoDerecha;
+    public Rigidbody2D rb2D;
+    public Animator animator;
+
+    public EstadosMovimiento estadoActual;
+    public enum EstadosMovimiento
+    {
+        Esperando,
+        Siguiendo,
+        Volviendo,
+    }
+    void Start()
+    {
+        puntoInicial = transform.position;
+    }
+
+
+    void Update()
+    {
+        switch (estadoActual)
+        {
+            case EstadosMovimiento.Esperando:
+                EstadoEsperando();
+                break;
+            case EstadosMovimiento.Siguiendo:
+                EstadoSiguiendo();
+                break;
+            case EstadosMovimiento.Volviendo:
+                EstadoVolviendo();
+                break;
+
+        }
+
+
+    }
+
+    private void EstadoEsperando()
+    {
+        Collider2D jugadorCollider = Physics2D.OverlapCircle(transform.position, radioBusqueda, capaJugador);
+        if (jugadorCollider)
+        {
+            transformJugador = jugadorCollider.transform;
+
+            estadoActual = EstadosMovimiento.Siguiendo;
+        }
+    }
+
+    private void EstadoSiguiendo()
+    {
+        //animator.SetBool("Corriendo", true);
+
+        if (transformJugador == null)
+        {
+            estadoActual = EstadosMovimiento.Volviendo;
+            return;
+        }
+
+        if (transform.position.x < transformJugador.position.x)
+        {
+            rb2D.linearVelocity = new Vector2(velocidadMovimiento, rb2D.linearVelocity.y);
+        }
+        else
+        {
+            rb2D.linearVelocity = new Vector2(-velocidadMovimiento, rb2D.linearVelocity.y);
+        }
+
+        GirarAObjetivo(transformJugador.position);
+
+        if (Vector2.Distance(transform.position, puntoInicial) > distanciaMaxima || Vector2.Distance(transform.position, transformJugador.position) > distanciaMaxima)
+        {
+            estadoActual = EstadosMovimiento.Volviendo;
+            transformJugador = null;
+        }
+    }
+
+    private void EstadoVolviendo()
+    {
+        if (transform.position.x < puntoInicial.x)
+        {
+            rb2D.linearVelocity = new Vector2(velocidadMovimiento, rb2D.linearVelocity.y);
+        }
+        else
+        {
+            rb2D.linearVelocity = new Vector2(-velocidadMovimiento, rb2D.linearVelocity.y);
+        }
+
+        GirarAObjetivo(puntoInicial);
+
+        if (Vector2.Distance(transform.position, puntoInicial) < 0.1f)
+        {
+            rb2D.linearVelocity = Vector2.zero;
+
+            animator.SetBool("Corriendo", false);
+
+            estadoActual = EstadosMovimiento.Esperando;
+        }
+    }
+
+    private void GirarAObjetivo(Vector3 objetivo)
+    {
+        if (objetivo.x > transform.position.x && !mirandoDerecha)
+        {
+            Girar();
+        }
+        else if (objetivo.x < transform.position.x && mirandoDerecha)
+        {
+            Girar();
+        }
+    }
+
+    private void Girar()
+    {
+        mirandoDerecha = !mirandoDerecha;
+        transform.eulerAngles = new Vector3(0, transform.eulerAngles.y + 180, 0);
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, radioBusqueda);
+        Gizmos.DrawWireSphere(puntoInicial, distanciaMaxima);
+    }
+}`
+},
+{
+  target:'scripts-jefe',
+  file:'JefeBoss.cs', className:'JefeBoss',
+  purpose:'Enemigo jefe: reutiliza la máquina de tres estados de persecución y le añade un salto aleatorio independiente, más un chequeo de suelo propio.',
+  how:'Además de correr la misma máquina de estados que el gusano, en cada Update comprueba si está tocando el suelo con un OverlapCircle en un punto dedicado, y descuenta un temporizador de salto. Cuando el temporizador llega a cero y el jefe está en el suelo, salta con un impulso vertical y reinicia el temporizador con un valor aleatorio entre un mínimo y un máximo configurables — el salto ocurre sin importar en qué estado de persecución se encuentre.',
+  vars:[
+    ['fuerzaSalto / tiempoMinEntreSaltos / tiempoMaxEntreSaltos','Controlan la fuerza y el ritmo del salto aleatorio.'],
+    ['puntoChequeoSuelo / radioChequeoSuelo / capaSuelo','Definen dónde y cómo se detecta si el jefe está tocando el suelo.'],
+    ['temporizadorSalto / enElSuelo','Estado interno del sistema de salto.'],
+    ['(resto de variables)','Iguales en propósito a las de Gusano: persecución, retorno y orientación.']
+  ],
+  funcs:[
+    ['ManejarSaltoAleatorio()','Descuenta el temporizador y ejecuta el salto cuando corresponde.'],
+    ['Saltar()','Aplica el impulso vertical sobre el Rigidbody2D.'],
+    ['ReiniciarTemporizadorSalto()','Calcula un nuevo intervalo aleatorio hasta el próximo salto.'],
+    ['EstadoEsperando() / EstadoSiguiendo() / EstadoVolviendo() / GirarAObjetivo() / Girar()','Misma máquina de estados que los enemigos comunes.']
+  ],
+  interactions:['Mismo patrón de detección de jugador por LayerMask que el resto de enemigos.'],
+  components:['Rigidbody2D','Physics2D.OverlapCircle (jugador y suelo)','Random.Range','Animator','Gizmos'],
+  events:['Start','Update','OnDrawGizmos'],
+  good:['El salto es independiente del estado de persecución, lo que le da variedad de movimiento sin complicar la máquina de estados principal.','Uso de <code>Random.Range</code> para evitar un patrón de salto predecible.'],
+  improve:['Comparte la misma duplicación de código de persecución que Murciélago y Gusano — es el ejemplo más claro de por qué conviene una clase base común, ya que aquí se añadió una funcionalidad extra (el salto) que tendría que copiarse a mano si algún otro enemigo la necesitara.'],
+  code:`using UnityEngine;
+
+public class JefeBoss : MonoBehaviour
+{
+    public float radioBusqueda;
+    public LayerMask capaJugador;
+    public Transform transformJugador;
+    public float velocidadMovimiento;
+    public float distanciaMaxima;
+    public Vector3 puntoInicial;
+    public bool mirandoDerecha;
+    public Rigidbody2D rb2D;
+    public Animator animator;
+
+    [Header("Salto aleatorio")]
+    public float fuerzaSalto = 6f;
+    public float tiempoMinEntreSaltos = 2f;
+    public float tiempoMaxEntreSaltos = 5f;
+    public Transform puntoChequeoSuelo;
+    public float radioChequeoSuelo = 0.2f;
+    public LayerMask capaSuelo;
+
+    private float temporizadorSalto;
+    private bool enElSuelo;
+
+    public EstadosMovimiento estadoActual;
+    public enum EstadosMovimiento
+    {
+        Esperando,
+        Siguiendo,
+        Volviendo,
+    }
+
+    void Start()
+    {
+        puntoInicial = transform.position;
+        ReiniciarTemporizadorSalto();
+    }
+
+    void Update()
+    {
+        enElSuelo = Physics2D.OverlapCircle(puntoChequeoSuelo.position, radioChequeoSuelo, capaSuelo);
+
+        switch (estadoActual)
+        {
+            case EstadosMovimiento.Esperando:
+                EstadoEsperando();
+                break;
+            case EstadosMovimiento.Siguiendo:
+                EstadoSiguiendo();
+                break;
+            case EstadosMovimiento.Volviendo:
+                EstadoVolviendo();
+                break;
+        }
+
+        ManejarSaltoAleatorio();
+    }
+
+    private void ManejarSaltoAleatorio()
+    {
+        // Si quieres que SOLO salte mientras sigue o vuelve, agrega aquí la condición de estado.
+        temporizadorSalto -= Time.deltaTime;
+
+        if (temporizadorSalto <= 0f && enElSuelo)
+        {
+            Saltar();
+            ReiniciarTemporizadorSalto();
+        }
+    }
+
+    private void Saltar()
+    {
+        rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, fuerzaSalto);
+        // animator.SetTrigger("Saltar"); // si tienes animación de salto
+    }
+
+    private void ReiniciarTemporizadorSalto()
+    {
+        temporizadorSalto = Random.Range(tiempoMinEntreSaltos, tiempoMaxEntreSaltos);
+    }
+
+    private void EstadoEsperando()
+    {
+        Collider2D jugadorCollider = Physics2D.OverlapCircle(transform.position, radioBusqueda, capaJugador);
+        if (jugadorCollider)
+        {
+            transformJugador = jugadorCollider.transform;
+            estadoActual = EstadosMovimiento.Siguiendo;
+        }
+    }
+
+    private void EstadoSiguiendo()
+    {
+        if (transformJugador == null)
+        {
+            estadoActual = EstadosMovimiento.Volviendo;
+            return;
+        }
+
+        if (transform.position.x < transformJugador.position.x)
+        {
+            rb2D.linearVelocity = new Vector2(velocidadMovimiento, rb2D.linearVelocity.y);
+        }
+        else
+        {
+            rb2D.linearVelocity = new Vector2(-velocidadMovimiento, rb2D.linearVelocity.y);
+        }
+
+        GirarAObjetivo(transformJugador.position);
+
+        if (Vector2.Distance(transform.position, puntoInicial) > distanciaMaxima || Vector2.Distance(transform.position, transformJugador.position) > distanciaMaxima)
+        {
+            estadoActual = EstadosMovimiento.Volviendo;
+            transformJugador = null;
+        }
+    }
+
+    private void EstadoVolviendo()
+    {
+        if (transform.position.x < puntoInicial.x)
+        {
+            rb2D.linearVelocity = new Vector2(velocidadMovimiento, rb2D.linearVelocity.y);
+        }
+        else
+        {
+            rb2D.linearVelocity = new Vector2(-velocidadMovimiento, rb2D.linearVelocity.y);
+        }
+
+        GirarAObjetivo(puntoInicial);
+
+        if (Vector2.Distance(transform.position, puntoInicial) < 0.1f)
+        {
+            rb2D.linearVelocity = Vector2.zero;
+            animator.SetBool("Corriendo", false);
+            estadoActual = EstadosMovimiento.Esperando;
+        }
+    }
+
+    private void GirarAObjetivo(Vector3 objetivo)
+    {
+        if (objetivo.x > transform.position.x && !mirandoDerecha)
+        {
+            Girar();
+        }
+        else if (objetivo.x < transform.position.x && mirandoDerecha)
+        {
+            Girar();
+        }
+    }
+
+    private void Girar()
+    {
+        mirandoDerecha = !mirandoDerecha;
+        transform.eulerAngles = new Vector3(0, transform.eulerAngles.y + 180, 0);
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, radioBusqueda);
+        Gizmos.DrawWireSphere(puntoInicial, distanciaMaxima);
+
+        if (puntoChequeoSuelo != null)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(puntoChequeoSuelo.position, radioChequeoSuelo);
+        }
+    }
+}`
+},
+{
+  target:'scripts-ambiente',
+  file:'Camara.cs', className:'Camara',
+  purpose:'Hace que la cámara siga suavemente a un objetivo (normalmente el jugador), en vez de seguirlo de forma rígida.',
+  how:'En cada LateUpdate calcula la posición deseada sumando un desplazamiento fijo a la posición del objetivo, y se interpola suavemente hacia ella con Vector3.Lerp, generando el efecto de seguimiento amortiguado.',
+  vars:[
+    ['objetivo','El Transform que la cámara debe seguir.'],
+    ['velcam','Qué tan rápido converge la cámara hacia la posición deseada.'],
+    ['desplazamiento','Offset fijo respecto al objetivo (por ejemplo, para dejar más espacio visible por delante).']
+  ],
+  funcs:[['LateUpdate()','Recalcula y suaviza la posición de la cámara después de que el resto de objetos ya se movió en el frame.']],
+  interactions:['No depende de ningún otro script directamente; se limita a leer la posición del Transform asignado como objetivo.'],
+  components:['Transform','Vector3.Lerp'],
+  events:['LateUpdate'],
+  good:['Uso correcto de <code>LateUpdate()</code> para cámaras — garantiza que el objetivo ya se movió antes de recalcular la posición de la cámara en el mismo frame.'],
+  improve:['<code>objetivo</code> no tiene comprobación de null; si no se asigna en el Inspector, lanzará una excepción en el primer frame.'],
+  code:`using UnityEngine;
+
+public class Camara : MonoBehaviour
+{
+public Transform objetivo;
+public float velcam = 0.025f;
+
+public Vector3 desplazamiento;
+
+private void LateUpdate()
+    {
+        Vector3 posicionDeseada = objetivo.position + desplazamiento;
+        Vector3 posicionSuave = Vector3.Lerp(transform.position, posicionDeseada, velcam);
+        transform.position = posicionSuave;
+    }
+}
+`
+},
+{
+  target:'scripts-ambiente',
+  file:'Parala.cs', className:'ParallaxController',
+  purpose:'Crea el efecto de fondo con parallax: las capas más lejanas se mueven más despacio que las cercanas al desplazarse la cámara.',
+  how:'Al iniciar, recopila todos los hijos como capas de fondo y calcula, según su posición en el eje Z respecto a la cámara, qué tan rápido debe desplazarse cada una — cuanto más lejos, más despacio se mueve el offset de su textura. En LateUpdate, calcula cuánto se movió la cámara desde el inicio y desplaza el offset de textura de cada material proporcionalmente a su velocidad calculada.',
+  vars:[
+    ['cam / camStartPos','Referencia a la cámara principal y su posición inicial.'],
+    ['backgrounds / mat / backSpeed','Arreglos paralelos con cada capa de fondo, su material y su velocidad de parallax calculada.'],
+    ['parallaxSpeed','Multiplicador global de intensidad del efecto.'],
+    ['farthestBack','La distancia Z de la capa de fondo más lejana, usada como referencia para escalar las demás.']
+  ],
+  funcs:[
+    ['Start()','Recolecta las capas hijas y dispara el cálculo de velocidades.'],
+    ['BackSpeedCalculate(backCount)','Determina qué tan rápido debe moverse cada capa según su profundidad relativa a la cámara.'],
+    ['LateUpdate()','Aplica el desplazamiento de textura a cada capa según cuánto se movió la cámara.']
+  ],
+  interactions:['Lee la posición de <code>Camera.main</code> cada frame; no depende de otros scripts del proyecto.'],
+  components:['Renderer / Material','Camera.main'],
+  events:['Start','LateUpdate'],
+  good:['El cálculo de velocidad por capa es dinámico según la posición real de cada hijo, en vez de valores fijos a mano.'],
+  improve:[
+    'Los comentarios internos del script están escritos en indonesio (<code>"jarak antara start camera posisi dan current posisi"</code>), lo que indica que el script fue adaptado de un tutorial o asset externo sin traducir del todo.',
+    'Usa <code>GetComponent&lt;Renderer&gt;().material</code> en vez de <code>.sharedMaterial</code>; esto crea una instancia de material por objeto en tiempo de ejecución, lo que puede generar uso de memoria innecesario si hay muchas capas.',
+    'Si todas las capas de fondo comparten la misma posición Z que la cámara, <code>farthestBack</code> sería 0 y el cálculo de velocidad produciría una división entre cero.'
+  ],
+  code:`using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class ParallaxController : MonoBehaviour
+{
+    Transform cam; //Main Camera
+    Vector3 camStartPos;
+    float distance; //jarak antara start camera posisi dan current posisi
+
+    GameObject[] backgrounds;
+    Material[] mat;
+    float[] backSpeed;
+
+    float farthestBack;
+
+    [Range(0.01f, 1f)]
+    public float parallaxSpeed;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        cam = Camera.main.transform;
+        camStartPos = cam.position;
+
+        int backCount = transform.childCount;
+        mat = new Material[backCount];
+        backSpeed = new float[backCount];
+        backgrounds = new GameObject[backCount];
+
+        for (int i = 0; i < backCount; i++)
+        {
+            backgrounds[i] = transform.GetChild(i).gameObject;
+            mat[i] = backgrounds[i].GetComponent<Renderer>().material;
+        }
+
+        BackSpeedCalculate(backCount);
+    }
+
+    void BackSpeedCalculate(int backCount)
+    {
+        for (int i = 0; i < backCount; i++) //find the farthest background
+        {
+            if((backgrounds[i].transform.position.z - cam.position.z) > farthestBack)
+            {
+                farthestBack = backgrounds[i].transform.position.z - cam.position.z;
+            }
+        }
+
+        for (int i = 0; i < backCount; i++) //set the speed of bacground
+        {
+            backSpeed[i] = 1 - (backgrounds[i].transform.position.z - cam.position.z) / farthestBack;
+        }
+    }
+
+    private void LateUpdate()
+    {
+        distance = cam.position.x - camStartPos.x;
+        transform.position = new Vector3(cam.position.x, transform.position.y,  0f);
+
+        for (int i = 0; i < backgrounds.Length; i++)
+        {
+            float speed = backSpeed[i] * parallaxSpeed;
+            mat[i].SetTextureOffset("_MainTex", new Vector2(distance, 0) * speed);
+        }
+    }
+
+    
+}`
+},
+{
+  target:'scripts-interfaz',
+  file:'Buttons.cs', className:'Buttons',
+  purpose:'Centraliza las acciones de los botones de menú: jugar, salir, ir a créditos y volver al menú.',
+  how:'Cada método público corresponde a un botón de UI configurado en el Inspector, y simplemente delega en SceneManager para cambiar de escena o cerrar la aplicación.',
+  vars:[],
+  funcs:[
+    ['play()','Carga la siguiente escena según el índice de Build Settings.'],
+    ['salir()','Cierra la aplicación (no tiene efecto en el editor de Unity, solo en un build).'],
+    ['ircredits()','Carga la escena "Creditos".'],
+    ['irmenu()','Carga la escena "Inicio".']
+  ],
+  interactions:['No depende de otros scripts; es un puente directo entre la UI y el sistema de escenas de Unity.'],
+  components:['SceneManager'],
+  events:['Ninguno propio — se conecta desde el evento OnClick de cada botón de UI en el Inspector.'],
+  good:['Métodos cortos y con nombres autoexplicativos, fáciles de conectar desde el Inspector.'],
+  improve:['<code>play()</code> usa <code>buildIndex + 1</code> sin validar límites; si se presiona en la última escena configurada en Build Settings, lanzará un error de índice fuera de rango.'],
+  code:`using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class Buttons : MonoBehaviour
+{
+public void play()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+    }
+
+    public void salir()
+    {
+         
+        Debug.Log("Salir del juego");
+        Application.Quit();
+       
+    }
+
+    public void ircredits()
+    {
+        SceneManager.LoadScene("Creditos");
+    }
+
+    public void irmenu()
+    {
+        SceneManager.LoadScene("Inicio");
+    }
+}`
+},
+{
+  target:'scripts-interfaz',
+  file:'MPause.cs', className:'MPause',
+  purpose:'Gestiona la pausa del juego: abre/cierra el menú de pausa y congela o reanuda el tiempo.',
+  how:'Escucha la tecla Escape cada frame; según el estado actual, decide si debe pausar o reanudar, y cambia Time.timeScale en consecuencia.',
+  vars:[
+    ['menuPausa','El panel de UI que se muestra u oculta al pausar.'],
+    ['juegopausado','Estado actual de la pausa.']
+  ],
+  funcs:[
+    ['Update()','Escucha la tecla Escape y alterna entre pausar y reanudar.'],
+    ['Reanudar()','Oculta el panel de pausa y restaura el tiempo normal.'],
+    ['Pausar()','Muestra el panel de pausa y detiene el tiempo del juego.']
+  ],
+  interactions:['No depende de otros scripts; actúa directamente sobre <code>Time.timeScale</code>, lo que afecta a todo el proyecto.'],
+  components:['GameObject.SetActive','Time.timeScale'],
+  events:['Update'],
+  good:['Implementación mínima y directa, fácil de razonar y de extender.'],
+  improve:['No pausa el audio explícitamente; los sonidos en curso seguirán reproduciéndose aunque el juego esté congelado en físicas y animación.'],
+  code:`using UnityEngine;
+
+public class MPause : MonoBehaviour
+{
+    public GameObject menuPausa;
+    public bool juegopausado = false;
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (juegopausado)
+            {
+                Reanudar();
+            }
+            else
+            {
+                Pausar();
+            }
+        }
+    }
+
+    public void Reanudar()
+    {
+        menuPausa.SetActive(false);
+        Time.timeScale = 1f;
+        juegopausado = false;
+    }
+
+    public void Pausar()
+    {
+        menuPausa.SetActive(true);
+        Time.timeScale = 0f;
+        juegopausado = true;
+    }
+}`
+},
+{
+  target:'scripts-interfaz',
+  file:'gammanager.cs', className:'GameManager',
+  purpose:'Gestor central de partida: controla la pantalla de Game Over, el reinicio de nivel y el regreso al menú, accesible globalmente como singleton.',
+  how:'En Awake se asegura de que solo exista una instancia activa (patrón singleton). En Start oculta el panel de Game Over y conecta los botones de reinicio y menú a sus funciones correspondientes. Mientras el Game Over está activo, escucha las teclas R (reiniciar) y Escape/M (menú). GameOver() activa el panel una sola vez, evitando activaciones repetidas.',
+  vars:[
+    ['Instance','Referencia estática global para acceder al GameManager desde cualquier script.'],
+    ['gameOverPanel / gameOverText','Elementos de UI que se muestran al perder.'],
+    ['reiniciarButton / menuButton','Botones conectados por código a sus acciones.'],
+    ['gameOverActivo','Evita que el Game Over se dispare más de una vez.']
+  ],
+  funcs:[
+    ['Awake()','Establece el patrón singleton, destruyendo instancias duplicadas.'],
+    ['Start()','Oculta el panel de Game Over y conecta los listeners de los botones.'],
+    ['Update()','Escucha los atajos de teclado disponibles solo durante el Game Over.'],
+    ['GameOver()','Activa el panel de derrota una única vez.'],
+    ['ReiniciarEscen()','Recarga la escena actual y restaura el tiempo normal.'],
+    ['IrMenu()','Carga la escena "Inicio".']
+  ],
+  interactions:['Es invocado por <code>VidaJugador.TomarDaño()</code> cuando la vida llega a cero (<code>GameManager.Instance.GameOver()</code>).'],
+  components:['Button.onClick.AddListener','SceneManager','TextMeshProUGUI'],
+  events:['Awake','Start','Update'],
+  good:['Patrón singleton correctamente implementado, con destrucción de duplicados.','Bandera <code>gameOverActivo</code> que previene múltiples activaciones del panel de derrota.'],
+  improve:['No usa <code>DontDestroyOnLoad</code>, por lo que la instancia del singleton no persiste entre escenas — se destruye y se vuelve a crear cada vez que se carga una escena nueva que lo contenga.'],
+  code:`using UnityEngine;
+using TMPro;
+using UnityEngine.UI;
+using System;
+using UnityEngine.SceneManagement;
+using System.ComponentModel;
+
+public class GameManager : MonoBehaviour
+{
+  public static GameManager Instance;
+  public GameObject gameOverPanel;
+  public TextMeshProUGUI gameOverText;
+  public Button reiniciarButton;
+  public Button menuButton;
+
+
+  private bool gameOverActivo = false;
+
+  
+  void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+           ;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+  void Start()
+    {
+        if(gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(false);
+        }
+
+        if(reiniciarButton != null)
+        {
+            reiniciarButton.onClick.AddListener(ReiniciarEscen);
+        }
+
+        if(menuButton != null)
+        {
+            menuButton.onClick.AddListener(IrMenu);
+        }
+        
+    }
+
+
+    void Update()
+    {
+        if (gameOverActivo)
+        {
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                ReiniciarEscen();
+            }
+            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.M))
+            {
+                IrMenu();
+            }
+        }
+    }
+
+    public void GameOver()
+    {
+        if(gameOverActivo)
+        {
+            return;
+        }
+        gameOverActivo = true;
+        if(gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(true);
+        }
+        if(gameOverText != null)
+        {
+            gameOverText.text = "GAME OVER";
+        }
+    }
+
+    public void ReiniciarEscen()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void IrMenu()
+    {
+        SceneManager.LoadScene("Inicio");
+    }
+}`
+},
+{
+  target:'scripts-interfaz',
+  file:'Creditos.cs', className:'Creditos',
+  purpose:'Controla la pantalla de créditos: regresa al menú automáticamente después de un tiempo fijo, o de inmediato si se presiona Escape.',
+  how:'Al iniciar, programa una llamada diferida a VolverMenu tras un número exacto de segundos mediante Invoke. En Update, si se presiona Escape, se salta directamente al menú sin esperar.',
+  vars:[],
+  funcs:[
+    ['Start()','Programa el regreso automático al menú tras 97.05 segundos.'],
+    ['Update()','Permite saltar los créditos con Escape.'],
+    ['VolverMenu()','Carga la escena "Inicio".'],
+    ['iracredits()','Recarga la propia escena de créditos.']
+  ],
+  interactions:['No depende de otros scripts.'],
+  components:['Invoke','SceneManager'],
+  events:['Start','Update'],
+  good:['Permite saltar la espera con Escape, evitando frustración si alguien no quiere ver los créditos completos.'],
+  improve:['El tiempo de espera (97.05s) está escrito como un valor fijo en el código; si la duración de la música o el video de créditos cambia, hay que recordar actualizar este número manualmente en el script.'],
+  code:`using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class Creditos : MonoBehaviour
+{
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
+    {
+        Invoke("VolverMenu", 97.05f);
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            VolverMenu();
+        }
+    }
+
+    public void VolverMenu()
+    {
+        SceneManager.LoadScene("Inicio");
+    }
+
+    public void iracredits()
+    {
+        SceneManager.LoadScene("Creditos");
+    }
+}`
+},
+{
+  target:'scripts-interfaz',
+  file:'Pasar_Nivel.cs', className:'PasarNivel',
+  purpose:'Avanza al siguiente nivel cuando el jugador toca un área de transición (por ejemplo, el final de una fase).',
+  how:'Detecta el contacto por trigger y comprueba que el objeto que entró tenga el tag "Player"; si es así, carga la siguiente escena por índice de Build Settings.',
+  vars:[],
+  funcs:[['OnTriggerEnter2D(collision)','Detecta al jugador y avanza a la siguiente escena.']],
+  interactions:['Usa el mismo mecanismo de avance por índice que <code>Buttons.play()</code>.'],
+  components:['Collider2D (trigger)','SceneManager'],
+  events:['OnTriggerEnter2D'],
+  good:['Chequeo explícito por tag "Player", evitando que cualquier objeto dispare el cambio de escena.'],
+  improve:['Requiere que el GameObject del jugador tenga el tag "Player" configurado correctamente y que el collider de esta zona tenga activado "Is Trigger"; si cualquiera de las dos condiciones falla en el Inspector, la transición de nivel no ocurrirá.'],
+  code:`using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class PasarNivel : MonoBehaviour
+{
+    // El método correcto para Triggers (Gatillos)
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Player"))
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        }
+    }
+}`
+}
+];
+
+/* ============================================================
+   RENDER — construye cada tarjeta de script dentro de su sección
+   ============================================================ */
+function renderList(title, items){
+  if(!items || !items.length) return '';
+  return `<ul>${items.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+}
+function renderKV(items){
+  if(!items || !items.length) return '';
+  return `<ul>${items.map(([k,v])=>`<li><b>${k}</b> — ${v}</li>`).join('')}</ul>`;
+}
+function renderBadges(items, cls){
+  if(!items || !items.length) return '';
+  return `<ul class="pill-list">${items.map(i=>`<li class="pill ${cls||''}">${i}</li>`).join('')}</ul>`;
+}
+
+let scriptCounter = 0;
+SCRIPTS.forEach(s=>{
+  scriptCounter++;
+  const uid = 'code-'+scriptCounter;
+  const host = document.getElementById(s.target);
+  if(!host) return;
+
+  const card = document.createElement('div');
+  card.className = 'script-card';
+  card.innerHTML = `
+    <div class="script-card-head">
+      <h3>${s.className} <span class="filename">${s.file}</span></h3>
+      <button class="toggle-code-btn" data-target="${uid}">Ver código fuente</button>
+    </div>
+    <div class="script-card-body">
+      <h4>Propósito</h4>
+      <p>${s.purpose}</p>
+      <h4>Cómo funciona</h4>
+      <p>${s.how}</p>
+      ${s.vars && s.vars.length ? `<h4>Variables clave</h4>${renderKV(s.vars)}` : ''}
+      ${s.funcs && s.funcs.length ? `<h4>Funciones</h4>${renderKV(s.funcs)}` : ''}
+      ${s.interactions && s.interactions.length ? `<h4>Interacción con otros scripts</h4>${renderList(null, s.interactions)}` : ''}
+      <h4>Componentes y eventos de Unity</h4>
+      ${renderBadges(s.components,'')} ${renderBadges(s.events,'')}
+      ${s.good && s.good.length ? `<h4>Puntos fuertes</h4>${renderList(null, s.good.map(g=>`<span style="color:var(--moss-400)">✓</span> ${g}`))}` : ''}
+    </div>
+    <div class="code-wrap" id="${uid}">
+      <div class="code-toolbar">
+        <span>${s.file}</span>
+        <button class="copy-btn" data-copy="${uid}-src">Copiar código</button>
+      </div>
+      <pre><code class="language-csharp" id="${uid}-src"></code></pre>
+    </div>
+  `;
+  host.appendChild(card);
+  // set code via textContent to avoid HTML injection from generics like List<string>
+  card.querySelector(`#${uid}-src`).textContent = s.code;
+});
+
+// syntax highlighting
+document.querySelectorAll('pre code').forEach(block=>{
+  hljs.highlightElement(block);
+});
+
+/* ============================================================
+   INTERACTIONS
+   ============================================================ */
+// toggle code blocks
+document.addEventListener('click', function(e){
+  const btn = e.target.closest('.toggle-code-btn');
+  if(btn){
+    const wrap = document.getElementById(btn.dataset.target);
+    const isOpen = wrap.classList.toggle('open');
+    btn.textContent = isOpen ? 'Ocultar código fuente' : 'Ver código fuente';
+    return;
+  }
+  const copyBtn = e.target.closest('.copy-btn');
+  if(copyBtn){
+    const src = document.getElementById(copyBtn.dataset.copy);
+    navigator.clipboard.writeText(src.textContent).then(()=>{
+      const original = copyBtn.textContent;
+      copyBtn.textContent = 'Copiado ✓';
+      copyBtn.classList.add('copied');
+      setTimeout(()=>{ copyBtn.textContent = original; copyBtn.classList.remove('copied'); }, 1600);
+    });
+  }
+});
+
+// mobile hamburger
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const sidebar = document.getElementById('sidebar');
+hamburgerBtn.addEventListener('click', ()=>{
+  const open = sidebar.classList.toggle('open');
+  hamburgerBtn.classList.toggle('open', open);
+  hamburgerBtn.setAttribute('aria-expanded', open ? 'true':'false');
+});
+document.querySelectorAll('.nav-link').forEach(link=>{
+  link.addEventListener('click', ()=>{
+    sidebar.classList.remove('open');
+    hamburgerBtn.classList.remove('open');
+  });
+});
+
+// depth gauge + active nav (scrollspy)
+const navLinks = Array.from(document.querySelectorAll('.nav-link'));
+const sectionsById = navLinks.map(l=>({
+  link:l,
+  el: document.querySelector(l.getAttribute('href')),
+  depth: parseFloat(l.dataset.depth)
+})).filter(x=>x.el);
+
+const gaugeRail = document.getElementById('gaugeRail');
+const gaugeMarker = document.getElementById('gaugeMarker');
+const gaugeFootLabel = document.getElementById('gaugeFootLabel');
+const maxDepth = Math.max(...sectionsById.map(s=>s.depth));
+
+function updateScrollSpy(){
+  let current = sectionsById[0];
+  const scrollPos = window.scrollY + 140;
+  for(const s of sectionsById){
+    if(s.el.offsetTop <= scrollPos) current = s;
+  }
+  navLinks.forEach(l=>l.classList.remove('active'));
+  current.link.classList.add('active');
+
+  const railHeight = gaugeRail.clientHeight || 1;
+  const pct = Math.min(1, current.depth / maxDepth);
+  gaugeMarker.style.top = (pct * (railHeight-16) + 8) + 'px';
+  gaugeMarker.dataset.depth = current.depth === 0 ? 'Superficie' : ('-' + current.depth + 'm');
+  gaugeFootLabel.textContent = (current.depth === 0 ? 'Superficie' : ('-' + current.depth + 'm')) + ' · ' + current.link.textContent.trim();
+}
+window.addEventListener('scroll', updateScrollSpy, {passive:true});
+window.addEventListener('resize', updateScrollSpy);
+window.addEventListener('load', updateScrollSpy);
+setTimeout(updateScrollSpy, 300);
+
+// lightbox (listo para cuando existan sprites reales)
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+document.addEventListener('click', function(e){
+  const img = e.target.closest('[data-lightbox]');
+  if(img){
+    lightboxImg.src = img.dataset.lightbox;
+    lightbox.classList.add('open');
+  }
+});
+document.getElementById('lightboxClose').addEventListener('click', ()=> lightbox.classList.remove('open'));
+lightbox.addEventListener('click', (e)=>{ if(e.target === lightbox) lightbox.classList.remove('open'); });
+</script>
+</body>
+</html>
